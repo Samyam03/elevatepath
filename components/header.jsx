@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -43,8 +37,8 @@ const Header = () => {
         </Link>
 
         <div className="flex items-center gap-4">
-          {/* Signed-in UI */}
           <SignedIn>
+            {/* Dashboard Button */}
             <Link href="/dashboard">
               <Button variant="outline" className="flex items-center gap-2">
                 <LayoutDashboard className="w-4 h-4" />
@@ -68,55 +62,39 @@ const Header = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/cover-letter" className="flex items-center gap-2">
+                  <Link
+                    href="/cover-letter"
+                    className="flex items-center gap-2"
+                  >
                     <PenBox className="w-4 h-4" />
                     Cover Letter
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/career-paths" className="flex items-center gap-2">
+                  <Link
+                    href="/career-paths"
+                    className="flex items-center gap-2"
+                  >
                     <GraduationCap className="w-4 h-4" />
                     Career Paths
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* User Button */}
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonPopover: {
-                    width: "auto",
-                    maxWidth: "300px",
-                  },
-                  userButtonAvatarBox: {
-                    width: "36px",
-                    height: "36px",
-                  },
-                  userButtonAvatar: {
-                    width: "36px",
-                    height: "36px",
-                  },
-                },
-              }}
-            />
           </SignedIn>
 
-          {/* Signed-out UI */}
           <SignedOut>
-            <SignInButton mode="modal">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <SignInButton mode="redirect" asChild>
+              <button className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors">
                 Sign In
               </button>
             </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
-                Sign Up
-              </button>
-            </SignUpButton>
           </SignedOut>
+
+          {/* User Button (simple) */}
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </nav>
     </header>
