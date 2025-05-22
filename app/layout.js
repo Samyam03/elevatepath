@@ -2,9 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/header";
-import {
-  ClerkProvider,
-} from '@clerk/nextjs'
+import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 
 const geistSans = Geist({
@@ -24,28 +22,31 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider appearance={{baseTheme:dark}}>
-    <html lang="en" suppressHydrationWarning>
-      <head />
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
+    <ClerkProvider appearance={{ baseTheme: dark }}>
+      <html lang="en" suppressHydrationWarning>
+        <head />
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <Header />
-          <main className="flex flex-col min-h-screen">{children}</main>
-          <footer>
-            <div className="flex items-center justify-center h-16 bg-gray-800 text-white">
-              <p>Footer Content</p>
-            </div>
-          </footer>
-        </ThemeProvider>
-      </body>
-    </html>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Header />
+            <main className="flex flex-col min-h-screen">{children}</main>
+            <footer>
+              <div className="flex flex-col items-center justify-center h-24 bg-gray-800 text-white text-sm space-y-1 px-4 text-center">
+                <p>
+                  © {new Date().getFullYear()} ElevatePath. All rights reserved.
+                </p>
+                <p>Empowering your career journey — one step at a time.</p>
+              </div>
+            </footer>
+          </ThemeProvider>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
