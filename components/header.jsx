@@ -17,8 +17,11 @@ import {
   FileText,
   PenBox,
 } from "lucide-react";
+import { checkUser } from "@/lib/checkUser";
 
-const Header = () => {
+const Header = async() => {
+  await checkUser();
+
   return (
     <header className="w-full bg-white shadow-md dark:bg-gray-900">
       <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -85,10 +88,11 @@ const Header = () => {
 
           <SignedOut>
             <SignInButton mode="redirect" asChild>
-              <button className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors">
-                Sign In
-              </button>
-            </SignInButton>
+  <Button className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors">
+    Sign In
+  </Button>
+</SignInButton>
+
           </SignedOut>
 
           {/* User Button (simple) */}
