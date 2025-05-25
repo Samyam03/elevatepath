@@ -1,11 +1,12 @@
-import React from 'react'
+'use client';
+import React from 'react';
 
-const OnboardingForm = ({industries}) => {
+const OnboardingForm = ({ industries }) => {
   return (
     <div>
       OnboardingForm
     </div>
-  )
-}
+  );
+};
 
-export default OnboardingForm
+export default OnboardingForm;
