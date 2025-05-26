@@ -2,6 +2,7 @@ import React from 'react'
 import { industries } from '@/components/data/industries'
 import {getUserOnboardingStatus} from '@/actions/user'
 import OnboardingForm from './_components/onboarding-form'
+import { redirect } from 'next/navigation'
 
 const OnBoardingPage = async() => {
 
