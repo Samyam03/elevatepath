@@ -11,7 +11,7 @@ const IndustryInsights = async () => {
 
   return (
     <div>
-      {/* Industry Insights UI goes here */}
+      Industry Insights Page
     </div>
   );
 };
