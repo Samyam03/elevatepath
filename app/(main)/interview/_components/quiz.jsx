@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import useFetch from "@/components/hooks/use-fetch";
 import { Button } from "@/components/ui/button";
+import QuizResult from "./quiz-result";
 import {
   Card,
   CardContent,
@@ -95,13 +96,13 @@ const Quiz = () => {
     );
   }
 
-//   if (resultData) {
-//     return (
-//       <div className="mx-2">
-//         <QuizResult result={resultData} onStartNew={startNewQuiz} />
-//       </div>
-//     );
-//   }
+  if (resultData) {
+    return (
+      <div className="mx-2">
+        <QuizResult result={resultData} onStartNew={startNewQuiz} />
+      </div>
+    );
+  }
 
   if (!quizData) {
     return (
