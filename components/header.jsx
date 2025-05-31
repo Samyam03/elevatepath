@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { checkUser } from "@/lib/checkUser";
 
-const Header = async() => {
+const Header = async () => {
   await checkUser();
 
   return (
@@ -87,15 +87,15 @@ const Header = async() => {
           </SignedIn>
 
           <SignedOut>
-            <SignInButton mode="redirect" asChild>
-  <Button className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors">
-    Sign In
-  </Button>
-</SignInButton>
-
+            {/* FIXED: Remove asChild from SignInButton */}
+            <SignInButton mode="redirect">
+              <Button className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors">
+                Sign In
+              </Button>
+            </SignInButton>
           </SignedOut>
 
-          {/* User Button (simple) */}
+          {/* User Button */}
           <SignedIn>
             <UserButton />
           </SignedIn>
