@@ -17,7 +17,7 @@ import Quiz from "../_components/quiz";
         </div>
 
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Mock Interview</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Interview Questions</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             Test your knowledge with industry-specific questions
           </p>

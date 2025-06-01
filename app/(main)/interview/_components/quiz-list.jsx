@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -59,12 +58,7 @@ const QuizList = ({ assessments }) => {
                     <CardDescription className="text-gray-400">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>Score: {assessment.quizScore.toFixed(1)}%</div>
-                        <div>
-                          {format(
-                            new Date(assessment.createdAt),
-                            "MMMM dd, yyyy HH:mm"
-                          )}
-                        </div>
+                        <div>{assessment.createdAtFormatted}</div>
                       </div>
                     </CardDescription>
                   </CardHeader>
