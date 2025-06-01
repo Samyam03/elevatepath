@@ -5,6 +5,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+
 // Initialize the AI model
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -30,7 +31,9 @@ export async function generateQuiz() {
 
   // Create a prompt for the AI model
   const prompt = `
-    Generate 10 technical interview questions for a ${user.industry} professional${
+    Generate 10 technical interview questions for a ${
+      user.industry
+    } professional${
     user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
   }.
 
