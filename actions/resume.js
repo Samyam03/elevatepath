@@ -59,7 +59,7 @@ export async function getResume() {
     });
   }
   
-  export async function improveWithAI({ current, type }) {
+  export async function improveWithAI({ current, type, organization }) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
   
@@ -73,7 +73,7 @@ export async function getResume() {
     if (!user) throw new Error("User not found");
   
     const prompt = `
-      As an expert resume writer, improve the following ${type} description for a ${user.industry} professional.
+      As an expert resume writer, improve the following ${type} description for a ${user.industry} professional who has worked for ${organization}.
       Make it more impactful, quantifiable, and aligned with industry standards.
       Current content: "${current}"
   
@@ -99,3 +99,30 @@ export async function getResume() {
       throw new Error("Failed to improve content");
     }
   }
+
+  export async function deleteResume() {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+  
+    // Get user info
+    const user = await db.user.findUnique({
+      where: { clerkUserId: userId },
+    });
+  
+    if (!user) throw new Error("User not found");
+  
+    try {
+      await db.resume.delete({
+        where: {
+          userId: user.id,
+        },
+      });
+  
+      revalidatePath("/resume"); // Refresh the resume page if needed
+      return { success: true };
+    } catch (error) {
+      console.error("Error deleting resume:", error);
+      throw new Error("Failed to delete resume");
+    }
+  }
+  

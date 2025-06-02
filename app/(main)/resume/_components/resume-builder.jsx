@@ -1,17 +1,43 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Save, Download } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { resumeSchema } from "@/app/lib/schema";
-import useFetch from "@/components/hooks/use-fetch";
-import { saveResume } from "@/actions/resume";
-import { Input } from "@/components/ui/input";
 
-const ResumeBuilder = ({ initialContent }) => {
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { deleteResume } from "@/actions/resume";
+import {
+  AlertTriangle,
+  Download,
+  Edit,
+  Loader2,
+  Monitor,
+  Save,
+} from "lucide-react";
+import { toast } from "sonner";
+import MDEditor from "@uiw/react-md-editor";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { saveResume } from "@/actions/resume";
+import EntryForm from "./entry-form";
+import useFetch from "@/components/hooks/use-fetch";
+import { useUser } from "@clerk/nextjs";
+import { entriesToMarkdown } from "@/app/lib/helper";
+import { resumeSchema } from "@/app/lib/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
+  const [previewContent, setPreviewContent] = useState(initialContent);
+  const { user } = useUser();
+  const [resumeMode, setResumeMode] = useState("preview");
 
   const {
     control,
@@ -38,67 +64,418 @@ const ResumeBuilder = ({ initialContent }) => {
     error: saveError,
   } = useFetch(saveResume);
 
+  const {
+    loading: isDeleting,
+    fn: deleteResumeFn,
+    data: deleteResult,
+    error: deleteError,
+  } = useFetch(deleteResume);
+  
+  
   const formValues = watch();
 
   useEffect(() => {
-    if (initialContent) {
-      setActiveTab("preview");
-    }
+    if (initialContent) setActiveTab("preview");
   }, [initialContent]);
 
+  // Update preview content when form values change
+  useEffect(() => {
+    if (activeTab === "edit") {
+      const newContent = getCombinedContent();
+      setPreviewContent(newContent ? newContent : initialContent);
+    }
+  }, [formValues, activeTab]);
+
+  // Handle save result
+  useEffect(() => {
+    if (saveResult && !isSaving) {
+      toast.success("Resume saved successfully!");
+    }
+    if (saveError) {
+      toast.error(saveError.message || "Failed to save resume");
+    }
+  }, [saveResult, saveError, isSaving]);
+
+  useEffect(() => {
+    if (deleteResult && !isDeleting) {
+      toast.success("Resume deleted successfully!");
+      setPreviewContent(""); // Optionally clear preview content
+    }
+    if (deleteError) {
+      toast.error(deleteError.message || "Failed to delete resume");
+    }
+  }, [deleteResult, deleteError, isDeleting]);
+  
+  const getContactMarkdown = () => {
+    const { contactInfo } = formValues;
+    const parts = [];
+    if (contactInfo.email) parts.push(`📧 ${contactInfo.email}`);
+    if (contactInfo.mobile) parts.push(`📱 ${contactInfo.mobile}`);
+    if (contactInfo.linkedin)
+      parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
+    if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
+
+    return parts.length > 0
+      ? `## <div align="center">${user.fullName}</div>
+        \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
+      : "";
+  };
+
+  const getCombinedContent = () => {
+    const { summary, skills, experience, education, projects } = formValues;
+    return [
+      getContactMarkdown(),
+      summary && `## Professional Summary\n\n${summary}`,
+      skills && `## Skills\n\n${skills}`,
+      entriesToMarkdown(experience, "Work Experience"),
+      entriesToMarkdown(education, "Education"),
+      entriesToMarkdown(projects, "Projects"),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  };
+
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generatePDF = async () => {
+    setIsGenerating(true);
+    try {
+      const html2pdf = (await import("html2pdf.js")).default; // dynamic import
+  
+      const element = document.getElementById("resume-pdf");
+      const opt = {
+        margin: [15, 15],
+        filename: "resume.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      };
+  
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error("PDF generation error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+
+  const onSubmit = async (data) => {
+    try {
+      const formattedContent = previewContent
+        .replace(/\n/g, "\n") // Normalize newlines
+        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
+        .trim();
+
+      console.log(previewContent, formattedContent);
+      await saveResumeFn(previewContent);
+    } catch (error) {
+      console.error("Save error:", error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-900 text-white p-6 md:p-10 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-3xl font-bold text-white">Resume Builder</h1>
-        <div className="flex gap-2">
-          <Button variant="default" className="gap-2">
-            <Save size={18} />
-            Save
-          </Button>
-          <Button variant="secondary" className="gap-2">
-            <Download size={18} />
-            Download
-          </Button>
+    <div data-color-mode="light" className="p-6 space-y-6">
+  <div className="space-y-4">
+    <h1 className="text-3xl font-bold">Resume Builder</h1>
+    <div className="flex gap-4">
+    <Dialog>
+  <DialogTrigger asChild>
+    <Button variant="destructive" disabled={isSaving}>
+      {isSaving ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Saving...
+        </>
+      ) : (
+        <>
+          <Save className="mr-2 h-4 w-4" />
+          Save
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Save Resume?</DialogTitle>
+      <DialogDescription>
+        This will overwrite your previous resume data.
+      </DialogDescription>
+    </DialogHeader>
+    <Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
+      Confirm Save
+    </Button>
+  </DialogContent>
+</Dialog>
+
+
+<Dialog>
+  <DialogTrigger asChild>
+    <Button disabled={isGenerating}>
+      {isGenerating ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Generating PDF...
+        </>
+      ) : (
+        <>
+          <Download className="mr-2 h-4 w-4" />
+          Download PDF
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Download Resume PDF?</DialogTitle>
+      <DialogDescription>
+        This will generate a PDF of your current resume.
+      </DialogDescription>
+    </DialogHeader>
+    <Button onClick={generatePDF} disabled={isGenerating}>
+      Confirm Download
+    </Button>
+  </DialogContent>
+</Dialog>
+
+
+<Dialog>
+  <DialogTrigger asChild>
+    <Button variant="outline" disabled={isDeleting}>
+      {isDeleting ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Deleting...
+        </>
+      ) : (
+        <>
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          Clear Resume
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Clear Resume?</DialogTitle>
+      <DialogDescription>
+        This action will delete all data and cannot be undone.
+      </DialogDescription>
+    </DialogHeader>
+    <Button onClick={deleteResumeFn} disabled={isDeleting} variant="destructive">
+      Confirm Clear
+    </Button>
+  </DialogContent>
+</Dialog>
+
+
+    </div>
+  </div>
+
+  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+    <TabsList className="flex gap-2">
+      <TabsTrigger value="edit">Form</TabsTrigger>
+      <TabsTrigger value="preview">Markdown</TabsTrigger>
+    </TabsList>
+
+    <TabsContent value="edit" className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Contact Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1">Email</label>
+              <Input
+                {...register("contactInfo.email")}
+                type="email"
+                placeholder="your@email.com"
+              />
+              {errors.contactInfo?.email && (
+                <p className="text-red-500 text-sm">{errors.contactInfo.email.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block mb-1">Mobile Number</label>
+              <Input
+                {...register("contactInfo.mobile")}
+                type="tel"
+                placeholder="+1 234 567 8900"
+              />
+              {errors.contactInfo?.mobile && (
+                <p className="text-red-500 text-sm">{errors.contactInfo.mobile.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block mb-1">LinkedIn URL</label>
+              <Input
+                {...register("contactInfo.linkedin")}
+                type="url"
+                placeholder="https://linkedin.com/in/your-profile"
+              />
+              {errors.contactInfo?.linkedin && (
+                <p className="text-red-500 text-sm">{errors.contactInfo.linkedin.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block mb-1">Twitter/X Profile</label>
+              <Input
+                {...register("contactInfo.twitter")}
+                type="url"
+                placeholder="https://twitter.com/your-handle"
+              />
+              {errors.contactInfo?.twitter && (
+                <p className="text-red-500 text-sm">{errors.contactInfo.twitter.message}</p>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Summary */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Professional Summary</h3>
+          <Controller
+            name="summary"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                placeholder="Write a compelling professional summary..."
+              />
+            )}
+          />
+          {errors.summary && (
+            <p className="text-red-500 text-sm">{errors.summary.message}</p>
+          )}
+        </div>
+
+        {/* Skills */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Skills</h3>
+          <Controller
+            name="skills"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                placeholder="List your key skills..."
+              />
+            )}
+          />
+          {errors.skills && (
+            <p className="text-red-500 text-sm">{errors.skills.message}</p>
+          )}
+        </div>
+
+        {/* Experience */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Work Experience</h3>
+          <Controller
+            name="experience"
+            control={control}
+            render={({ field }) => (
+              <EntryForm
+                type="Experience"
+                entries={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          {errors.experience && (
+            <p className="text-red-500 text-sm">{errors.experience.message}</p>
+          )}
+        </div>
+
+        {/* Education */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Education</h3>
+          <Controller
+            name="education"
+            control={control}
+            render={({ field }) => (
+              <EntryForm
+                type="Education"
+                entries={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          {errors.education && (
+            <p className="text-red-500 text-sm">{errors.education.message}</p>
+          )}
+        </div>
+
+        {/* Projects */}
+        <div className="space-y-2">
+          <h3 className="text-xl font-semibold">Projects</h3>
+          <Controller
+            name="projects"
+            control={control}
+            render={({ field }) => (
+              <EntryForm
+                type="Project"
+                entries={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          {errors.projects && (
+            <p className="text-red-500 text-sm">{errors.projects.message}</p>
+          )}
+        </div>
+
+      </form>
+    </TabsContent>
+
+    <TabsContent value="preview" className="space-y-6">
+      {activeTab === "preview" && (
+        <Button
+          variant="link"
+          type="button"
+          onClick={() =>
+            setResumeMode(resumeMode === "preview" ? "edit" : "preview")
+          }
+          className="text-sm"
+        >
+          {resumeMode === "preview" ? (
+            <>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Resume
+            </>
+          ) : (
+            <>
+              <Monitor className="mr-2 h-4 w-4" />
+              Show Preview
+            </>
+          )}
+        </Button>
+      )}
+
+      {activeTab === "preview" && resumeMode !== "preview" && (
+        <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-2 rounded-md">
+          <AlertTriangle className="h-4 w-4" />
+          <span>You will lose edited markdown if you update the form data.</span>
+        </div>
+      )}
+
+      <div className="border rounded-md overflow-hidden">
+        <MDEditor
+          value={previewContent}
+          onChange={setPreviewContent}
+          height={800}
+          preview={resumeMode}
+        />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-zinc-800 p-2 rounded-lg">
-          <TabsTrigger value="edit" className="text-sm">Form</TabsTrigger>
-          <TabsTrigger value="preview" className="text-sm">Markdown</TabsTrigger>
-        </TabsList>
+      <div className="hidden" id="resume-pdf">
+        <MDEditor.Markdown
+          source={previewContent}
+        />
+      </div>
+    </TabsContent>
+  </Tabs>
+</div>
 
-        <TabsContent value="edit" className="mt-6">
-          <form className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Contact Information</h3>
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-zinc-300">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  {...register("contactInfo.email")}
-                  type="email"
-                  placeholder="your@email.com"
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder-zinc-500"
-                />
-                {errors.contactInfo?.email && (
-                  <p className="text-red-500 text-sm">{errors.contactInfo.email.message}</p>
-                )}
-              </div>
-            </div>
-          </form>
-        </TabsContent>
-
-        <TabsContent value="preview" className="mt-6">
-          <div className="p-4 bg-zinc-800 rounded-lg text-zinc-300">
-            Change your password here.
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
   );
-};
-
-export default ResumeBuilder;
+}
