@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -70,8 +70,7 @@ export default function ResumeBuilder({ initialContent }) {
     data: deleteResult,
     error: deleteError,
   } = useFetch(deleteResume);
-  
-  
+
   const formValues = watch();
 
   useEffect(() => {
@@ -105,7 +104,7 @@ export default function ResumeBuilder({ initialContent }) {
       toast.error(deleteError.message || "Failed to delete resume");
     }
   }, [deleteResult, deleteError, isDeleting]);
-  
+
   const getContactMarkdown = () => {
     const { contactInfo } = formValues;
     const parts = [];
@@ -141,7 +140,7 @@ export default function ResumeBuilder({ initialContent }) {
     setIsGenerating(true);
     try {
       const html2pdf = (await import("html2pdf.js")).default; // dynamic import
-  
+
       const element = document.getElementById("resume-pdf");
       const opt = {
         margin: [15, 15],
@@ -150,7 +149,7 @@ export default function ResumeBuilder({ initialContent }) {
         html2canvas: { scale: 2 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       };
-  
+
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error("PDF generation error:", error);
@@ -158,7 +157,6 @@ export default function ResumeBuilder({ initialContent }) {
       setIsGenerating(false);
     }
   };
-  
 
   const onSubmit = async (data) => {
     try {
@@ -176,306 +174,330 @@ export default function ResumeBuilder({ initialContent }) {
 
   return (
     <div data-color-mode="light" className="p-6 space-y-6">
-  <div className="space-y-4">
-    <h1 className="text-3xl font-bold">Resume Builder</h1>
-    <div className="flex gap-4">
-    <Dialog>
-  <DialogTrigger asChild>
-    <Button variant="destructive" disabled={isSaving}>
-      {isSaving ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Saving...
-        </>
-      ) : (
-        <>
-          <Save className="mr-2 h-4 w-4" />
-          Save
-        </>
-      )}
-    </Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Save Resume?</DialogTitle>
-      <DialogDescription>
-        This will overwrite your previous resume data.
-      </DialogDescription>
-    </DialogHeader>
-    <Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
-      Confirm Save
-    </Button>
-  </DialogContent>
-</Dialog>
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold">Resume Builder</h1>
+        <div className="flex gap-4">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Save Resume?</DialogTitle>
+                <DialogDescription>
+                  This will overwrite your previous resume data.
+                </DialogDescription>
+              </DialogHeader>
+              <Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
+                Confirm Save
+              </Button>
+            </DialogContent>
+          </Dialog>
 
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Download Resume PDF?</DialogTitle>
+                <DialogDescription>
+                  This will generate a PDF of your current resume.
+                </DialogDescription>
+              </DialogHeader>
+              <Button onClick={generatePDF} disabled={isGenerating}>
+                Confirm Download
+              </Button>
+            </DialogContent>
+          </Dialog>
 
-<Dialog>
-  <DialogTrigger asChild>
-    <Button disabled={isGenerating}>
-      {isGenerating ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Generating PDF...
-        </>
-      ) : (
-        <>
-          <Download className="mr-2 h-4 w-4" />
-          Download PDF
-        </>
-      )}
-    </Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Download Resume PDF?</DialogTitle>
-      <DialogDescription>
-        This will generate a PDF of your current resume.
-      </DialogDescription>
-    </DialogHeader>
-    <Button onClick={generatePDF} disabled={isGenerating}>
-      Confirm Download
-    </Button>
-  </DialogContent>
-</Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Clear Resume
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Clear Resume?</DialogTitle>
+                <DialogDescription>
+                  This action will delete all data and cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <Button
+                onClick={deleteResumeFn}
+                disabled={isDeleting}
+                variant="destructive"
+              >
+                Confirm Clear
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
+        <TabsList className="flex gap-2 bg-black">
+          <TabsTrigger value="edit">Form</TabsTrigger>
+          <TabsTrigger value="preview">Markdown</TabsTrigger>
+        </TabsList>
 
-<Dialog>
-  <DialogTrigger asChild>
-    <Button variant="outline" disabled={isDeleting}>
-      {isDeleting ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Deleting...
-        </>
-      ) : (
-        <>
-          <AlertTriangle className="mr-2 h-4 w-4" />
-          Clear Resume
-        </>
-      )}
-    </Button>
-  </DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Clear Resume?</DialogTitle>
-      <DialogDescription>
-        This action will delete all data and cannot be undone.
-      </DialogDescription>
-    </DialogHeader>
-    <Button onClick={deleteResumeFn} disabled={isDeleting} variant="destructive">
-      Confirm Clear
-    </Button>
-  </DialogContent>
-</Dialog>
+        <TabsContent value="edit" className="space-y-8">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="p-6 bg-black border rounded-2xl shadow space-y-8"
+          >
+            {/* Contact Information */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1">Email</label>
+                  <Input
+                    {...register("contactInfo.email")}
+                    type="email"
+                    placeholder="your@email.com"
+                  />
+                  {errors.contactInfo?.email && (
+                    <p className="text-red-500 text-sm">
+                      {errors.contactInfo.email.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block mb-1">Mobile Number</label>
+                  <Input
+                    {...register("contactInfo.mobile")}
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                  />
+                  {errors.contactInfo?.mobile && (
+                    <p className="text-red-500 text-sm">
+                      {errors.contactInfo.mobile.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block mb-1">LinkedIn URL</label>
+                  <Input
+                    {...register("contactInfo.linkedin")}
+                    type="url"
+                    placeholder="https://linkedin.com/in/your-profile"
+                  />
+                  {errors.contactInfo?.linkedin && (
+                    <p className="text-red-500 text-sm">
+                      {errors.contactInfo.linkedin.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block mb-1">Twitter/X Profile</label>
+                  <Input
+                    {...register("contactInfo.twitter")}
+                    type="url"
+                    placeholder="https://twitter.com/your-handle"
+                  />
+                  {errors.contactInfo?.twitter && (
+                    <p className="text-red-500 text-sm">
+                      {errors.contactInfo.twitter.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
-
-    </div>
-  </div>
-
-  <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-    <TabsList className="flex gap-2">
-      <TabsTrigger value="edit">Form</TabsTrigger>
-      <TabsTrigger value="preview">Markdown</TabsTrigger>
-    </TabsList>
-
-    <TabsContent value="edit" className="space-y-8">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-        {/* Contact Information */}
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Contact Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1">Email</label>
-              <Input
-                {...register("contactInfo.email")}
-                type="email"
-                placeholder="your@email.com"
+            {/* Summary */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Professional Summary</h3>
+              <Controller
+                name="summary"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    {...field}
+                    placeholder="Write a compelling professional summary..."
+                  />
+                )}
               />
-              {errors.contactInfo?.email && (
-                <p className="text-red-500 text-sm">{errors.contactInfo.email.message}</p>
+              {errors.summary && (
+                <p className="text-red-500 text-sm">{errors.summary.message}</p>
               )}
             </div>
-            <div>
-              <label className="block mb-1">Mobile Number</label>
-              <Input
-                {...register("contactInfo.mobile")}
-                type="tel"
-                placeholder="+1 234 567 8900"
+
+            {/* Skills */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Skills</h3>
+              <Controller
+                name="skills"
+                control={control}
+                render={({ field }) => (
+                  <Textarea {...field} placeholder="List your key skills..." />
+                )}
               />
-              {errors.contactInfo?.mobile && (
-                <p className="text-red-500 text-sm">{errors.contactInfo.mobile.message}</p>
+              {errors.skills && (
+                <p className="text-red-500 text-sm">{errors.skills.message}</p>
               )}
             </div>
-            <div>
-              <label className="block mb-1">LinkedIn URL</label>
-              <Input
-                {...register("contactInfo.linkedin")}
-                type="url"
-                placeholder="https://linkedin.com/in/your-profile"
+
+            {/* Experience */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Work Experience</h3>
+              <Controller
+                name="experience"
+                control={control}
+                render={({ field }) => (
+                  <EntryForm
+                    type="Experience"
+                    entries={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              {errors.contactInfo?.linkedin && (
-                <p className="text-red-500 text-sm">{errors.contactInfo.linkedin.message}</p>
+              {errors.experience && (
+                <p className="text-red-500 text-sm">
+                  {errors.experience.message}
+                </p>
               )}
             </div>
-            <div>
-              <label className="block mb-1">Twitter/X Profile</label>
-              <Input
-                {...register("contactInfo.twitter")}
-                type="url"
-                placeholder="https://twitter.com/your-handle"
+
+            {/* Education */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Education</h3>
+              <Controller
+                name="education"
+                control={control}
+                render={({ field }) => (
+                  <EntryForm
+                    type="Education"
+                    entries={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
-              {errors.contactInfo?.twitter && (
-                <p className="text-red-500 text-sm">{errors.contactInfo.twitter.message}</p>
+              {errors.education && (
+                <p className="text-red-500 text-sm">
+                  {errors.education.message}
+                </p>
               )}
             </div>
+
+            {/* Projects */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold">Projects</h3>
+              <Controller
+                name="projects"
+                control={control}
+                render={({ field }) => (
+                  <EntryForm
+                    type="Project"
+                    entries={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+              {errors.projects && (
+                <p className="text-red-500 text-sm">
+                  {errors.projects.message}
+                </p>
+              )}
+            </div>
+          </form>
+        </TabsContent>
+
+        <TabsContent value="preview" className="space-y-6">
+          {activeTab === "preview" && (
+            <Button
+              variant="link"
+              type="button"
+              onClick={() =>
+                setResumeMode(resumeMode === "preview" ? "edit" : "preview")
+              }
+              className="text-sm"
+            >
+              {resumeMode === "preview" ? (
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Resume
+                </>
+              ) : (
+                <>
+                  <Monitor className="mr-2 h-4 w-4" />
+                  Show Preview
+                </>
+              )}
+            </Button>
+          )}
+
+          {activeTab === "preview" && resumeMode !== "preview" && (
+            <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-2 rounded-md">
+              <AlertTriangle className="h-4 w-4" />
+              <span>
+                You will lose edited markdown if you update the form data.
+              </span>
+            </div>
+          )}
+
+          <div className="border rounded-md overflow-hidden">
+            <MDEditor
+              value={previewContent}
+              onChange={setPreviewContent}
+              height={800}
+              preview={resumeMode}
+            />
           </div>
-        </div>
 
-        {/* Summary */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Professional Summary</h3>
-          <Controller
-            name="summary"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                {...field}
-                placeholder="Write a compelling professional summary..."
-              />
-            )}
-          />
-          {errors.summary && (
-            <p className="text-red-500 text-sm">{errors.summary.message}</p>
-          )}
-        </div>
-
-        {/* Skills */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Skills</h3>
-          <Controller
-            name="skills"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                {...field}
-                placeholder="List your key skills..."
-              />
-            )}
-          />
-          {errors.skills && (
-            <p className="text-red-500 text-sm">{errors.skills.message}</p>
-          )}
-        </div>
-
-        {/* Experience */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Work Experience</h3>
-          <Controller
-            name="experience"
-            control={control}
-            render={({ field }) => (
-              <EntryForm
-                type="Experience"
-                entries={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          {errors.experience && (
-            <p className="text-red-500 text-sm">{errors.experience.message}</p>
-          )}
-        </div>
-
-        {/* Education */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Education</h3>
-          <Controller
-            name="education"
-            control={control}
-            render={({ field }) => (
-              <EntryForm
-                type="Education"
-                entries={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          {errors.education && (
-            <p className="text-red-500 text-sm">{errors.education.message}</p>
-          )}
-        </div>
-
-        {/* Projects */}
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold">Projects</h3>
-          <Controller
-            name="projects"
-            control={control}
-            render={({ field }) => (
-              <EntryForm
-                type="Project"
-                entries={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          {errors.projects && (
-            <p className="text-red-500 text-sm">{errors.projects.message}</p>
-          )}
-        </div>
-
-      </form>
-    </TabsContent>
-
-    <TabsContent value="preview" className="space-y-6">
-      {activeTab === "preview" && (
-        <Button
-          variant="link"
-          type="button"
-          onClick={() =>
-            setResumeMode(resumeMode === "preview" ? "edit" : "preview")
-          }
-          className="text-sm"
-        >
-          {resumeMode === "preview" ? (
-            <>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Resume
-            </>
-          ) : (
-            <>
-              <Monitor className="mr-2 h-4 w-4" />
-              Show Preview
-            </>
-          )}
-        </Button>
-      )}
-
-      {activeTab === "preview" && resumeMode !== "preview" && (
-        <div className="flex items-center gap-2 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-2 rounded-md">
-          <AlertTriangle className="h-4 w-4" />
-          <span>You will lose edited markdown if you update the form data.</span>
-        </div>
-      )}
-
-      <div className="border rounded-md overflow-hidden">
-        <MDEditor
-          value={previewContent}
-          onChange={setPreviewContent}
-          height={800}
-          preview={resumeMode}
-        />
-      </div>
-
-      <div className="hidden" id="resume-pdf">
-        <MDEditor.Markdown
-          source={previewContent}
-        />
-      </div>
-    </TabsContent>
-  </Tabs>
-</div>
-
+          <div className="hidden" id="resume-pdf">
+            <MDEditor.Markdown source={previewContent} />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

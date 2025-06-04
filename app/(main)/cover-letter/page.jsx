@@ -8,13 +8,15 @@ export default async function CoverLetterPage() {
   const coverLetters = await getCoverLetters();
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row gap-2 items-center justify-between mb-5">
-        <h1 className="text-6xl font-bold gradient-title">My Cover Letters</h1>
+    <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-primary to-foreground text-transparent bg-clip-text leading-tight">
+          My Cover Letters
+        </h1>
         <Link href="/cover-letter/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create New
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            <span className="text-sm font-medium">Create New</span>
           </Button>
         </Link>
       </div>

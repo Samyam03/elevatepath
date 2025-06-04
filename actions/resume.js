@@ -122,7 +122,7 @@ export async function getResume() {
       return { success: true };
     } catch (error) {
       console.error("Error deleting resume:", error);
-      throw new Error("Failed to delete resume");
+      throw new Error("There is nothing to clear as resume has not been saved");
     }
   }
   
