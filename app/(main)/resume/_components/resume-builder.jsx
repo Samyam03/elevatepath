@@ -38,6 +38,9 @@ export default function ResumeBuilder({ initialContent }) {
   const [previewContent, setPreviewContent] = useState(initialContent);
   const { user } = useUser();
   const [resumeMode, setResumeMode] = useState("preview");
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const {
     control,
@@ -159,123 +162,134 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   const onSubmit = async (data) => {
-    try {
-      const formattedContent = previewContent
-        .replace(/\n/g, "\n") // Normalize newlines
-        .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
-        .trim();
-
-      console.log(previewContent, formattedContent);
-      await saveResumeFn(previewContent);
-    } catch (error) {
-      console.error("Save error:", error);
+  try {
+    if (!previewContent || previewContent.trim() === "") {
+      toast.error("Resume is empty. Please add content before saving.");
+      return;
     }
-  };
+
+    const formattedContent = previewContent
+      .replace(/\n/g, "\n") // Normalize newlines
+      .replace(/\n\s*\n/g, "\n\n") // Normalize multiple newlines to double newlines
+      .trim();
+
+    await saveResumeFn(formattedContent);
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error(error.message || "Failed to save resume");
+  }
+};
 
   return (
     <div data-color-mode="light" className="p-6 space-y-6">
       <div className="space-y-4">
         <h1 className="text-3xl font-bold">Resume Builder</h1>
         <div className="flex gap-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Save Resume?</DialogTitle>
-                <DialogDescription>
-                  This will overwrite your previous resume data.
-                </DialogDescription>
-              </DialogHeader>
-              <Button onClick={handleSubmit(onSubmit)} disabled={isSaving}>
-                Confirm Save
-              </Button>
-            </DialogContent>
-          </Dialog>
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+  <DialogTrigger asChild>
+    <Button disabled={isSaving}  className="bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50">
+      {isSaving ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Saving...
+        </>
+      ) : (
+        <>
+          <Save className="mr-2 h-4 w-4" />
+          Save
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Save Resume?</DialogTitle>
+      <DialogDescription>
+        This will overwrite your previous resume data.
+      </DialogDescription>
+    </DialogHeader>
+    <Button
+      onClick={async () => {
+        setSaveDialogOpen(false); // Immediately close
+        await handleSubmit(onSubmit)();
+      }}
+      disabled={isSaving}
+    >
+      Confirm Save
+    </Button>
+  </DialogContent>
+</Dialog>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download PDF
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Download Resume PDF?</DialogTitle>
-                <DialogDescription>
-                  This will generate a PDF of your current resume.
-                </DialogDescription>
-              </DialogHeader>
-              <Button onClick={generatePDF} disabled={isGenerating}>
-                Confirm Download
-              </Button>
-            </DialogContent>
-          </Dialog>
+<Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+  <DialogTrigger asChild>
+    <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50" disabled={isGenerating}>
+      {isGenerating ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Generating PDF...
+        </>
+      ) : (
+        <>
+          <Download className="mr-2 h-4 w-4" />
+          Download PDF
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Download Resume PDF?</DialogTitle>
+      <DialogDescription>
+        This will generate a PDF of your current resume.
+      </DialogDescription>
+    </DialogHeader>
+    <Button
+      onClick={async () => {
+        setDownloadDialogOpen(false); // Close immediately
+        await generatePDF();
+      }}
+      disabled={isGenerating}
+    >
+      Confirm Download
+    </Button>
+  </DialogContent>
+</Dialog>
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Clear Resume
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Clear Resume?</DialogTitle>
-                <DialogDescription>
-                  This action will delete all data and cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <Button
-                onClick={deleteResumeFn}
-                disabled={isDeleting}
-                variant="destructive"
-              >
-                Confirm Clear
-              </Button>
-            </DialogContent>
-          </Dialog>
+<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+  <DialogTrigger asChild>
+    <Button className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50" disabled={isDeleting}>
+      {isDeleting ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Deleting...
+        </>
+      ) : (
+        <>
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          Clear Resume
+        </>
+      )}
+    </Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Clear Resume?</DialogTitle>
+      <DialogDescription>
+        This action will delete all data and cannot be undone.
+      </DialogDescription>
+    </DialogHeader>
+    <Button
+      onClick={async () => {
+        setDeleteDialogOpen(false); // Close immediately
+        await deleteResumeFn();
+      }}
+      disabled={isDeleting}
+      variant="destructive"
+    >
+      Confirm Clear
+    </Button>
+  </DialogContent>
+</Dialog>
         </div>
       </div>
 
