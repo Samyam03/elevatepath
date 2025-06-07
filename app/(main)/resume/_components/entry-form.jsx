@@ -100,101 +100,94 @@ const EntryForm = ({ type, entries, onChange }) => {
   const organization = watch("organization");
 
   return (
-    <div className="space-y-8 bg-zinc-950 p-8 rounded-2xl border border-zinc-800 shadow-2xl">
-  
-        {entries.map((item, index) => (
-          <Card key={index} className="bg-zinc-900 border border-zinc-700 shadow-md rounded-xl transition-all duration-300">
-            <CardHeader className="flex justify-between items-start">
-              <div>
-                <CardTitle>{item.title} @ {item.organization}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
-                </p>
-              </div>
-              <Button
-                type="button"
-                onClick={() => handleDelete(index)}
-                className="text-red-400 hover:text-red-600"
-              >
-                <X />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <p className="mt-2 text-sm whitespace-pre-wrap text-zinc-300">{item.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-    
-      <div className="space-y-6"> 
+    <div className="space-y-8 bg-gray-900 p-6 rounded-xl border border-gray-800">
+      {entries.map((item, index) => (
+        <Card key={index} className="bg-gray-800 border border-gray-700">
+          <CardHeader className="flex flex-row justify-between items-start space-y-0">
+            <div>
+              <CardTitle className="text-white">{item.title} @ {item.organization}</CardTitle>
+              <CardDescription className="text-gray-400">
+                {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDelete(index)}
+              className="text-gray-400 hover:text-red-500"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-300 whitespace-pre-wrap">{item.description}</p>
+          </CardContent>
+        </Card>
+      ))}
 
       {isAdding && (
-        <Card className="bg-zinc-900 border border-zinc-700 text-white rounded-2xl shadow-xl">
+        <Card className="bg-gray-800 border border-gray-700">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-zinc-100">Add {type}</CardTitle>
-            <CardDescription className="text-sm text-zinc-400">
+            <CardTitle className="text-white">Add {type}</CardTitle>
+            <CardDescription className="text-gray-400">
               Provide the details of your {type.toLowerCase()} entry
             </CardDescription>
           </CardHeader>
-
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="title" className="block text-sm font-semibold text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Title / Position
                 </label>
                 <Input
-                  id="title"
                   placeholder="e.g. Software Engineer"
                   {...register('title')}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-600 rounded-md px-3 py-2"
+                  className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>}
+                {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>}
               </div>
 
               <div>
-                <label htmlFor="organization" className="block text-sm font-semibold text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Organization
                 </label>
                 <Input
-                  id="organization"
                   placeholder="e.g. OpenAI"
                   {...register('organization')}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-600 rounded-md px-3 py-2"
+                  className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.organization && <p className="text-sm text-red-500 mt-1">{errors.organization.message}</p>}
+                {errors.organization && <p className="text-red-400 text-sm mt-1">{errors.organization.message}</p>}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="startDate" className="block text-sm font-semibold text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Start Date
                 </label>
                 <Input
-                  id="startDate"
                   type="month"
                   {...register('startDate')}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white focus:ring-2 focus:ring-zinc-600 rounded-md px-3 py-2"
+                  className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.startDate && <p className="text-sm text-red-500 mt-1">{errors.startDate.message}</p>}
+                {errors.startDate && <p className="text-red-400 text-sm mt-1">{errors.startDate.message}</p>}
               </div>
 
               <div>
-                <label htmlFor="endDate" className="block text-sm font-semibold text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   End Date
                 </label>
                 <Input
-                  id="endDate"
                   type="month"
                   {...register('endDate')}
                   disabled={current}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white disabled:opacity-50 focus:ring-2 focus:ring-zinc-600 rounded-md px-3 py-2"
+                  className="bg-gray-700 border-gray-600 text-white disabled:opacity-50"
                 />
-                {errors.endDate && <p className="text-sm text-red-500 mt-1">{errors.endDate.message}</p>}
+                {errors.endDate && <p className="text-red-400 text-sm mt-1">{errors.endDate.message}</p>}
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <input
                 id="current"
                 type="checkbox"
@@ -203,20 +196,23 @@ const EntryForm = ({ type, entries, onChange }) => {
                   setValue('current', e.target.checked);
                   if (e.target.checked) setValue('endDate', '');
                 }}
-                className="accent-zinc-600 w-4 h-4"
+                className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-700"
               />
-              <label htmlFor="current" className="text-sm text-zinc-300">
+              <label htmlFor="current" className="text-sm text-gray-300">
                 I currently work here
               </label>
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Description
+              </label>
               <Textarea
                 placeholder={`Add your ${type}`}
                 {...register("description")}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:ring-2 focus:ring-zinc-600 min-h-[140px] rounded-md px-3 py-2"
+                className="bg-gray-700 border-gray-600 text-white min-h-[120px]"
               />
-              {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>}
+              {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description.message}</p>}
             </div>
 
             <Button
@@ -225,37 +221,35 @@ const EntryForm = ({ type, entries, onChange }) => {
               size="sm"
               onClick={handleImproveDescription}
               disabled={isImproving || !watch("description")}
-              className="mt-2 flex items-center text-sm font-medium text-blue-400 hover:text-white transition gap-2"
+              className="text-blue-400 hover:text-blue-300"
             >
               {isImproving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   Improving...
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4 mr-2" />
                   Improve with AI
                 </>
               )}
             </Button>
           </CardContent>
-
-          <CardFooter className="flex justify-end gap-3 pt-4">
+          <CardFooter className="flex justify-end gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => {
                 reset();
                 setIsAdding(false);
               }}
-              className="px-5 py-2 border border-zinc-700 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition"
+              className="text-gray-300 border-gray-600 hover:bg-gray-700"
             >
               Cancel
             </Button>
             <Button
-              variant="default"
               onClick={handleAdd}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              className="bg-blue-600 hover:bg-blue-700  text-white"
             >
               Add
             </Button>
@@ -266,14 +260,14 @@ const EntryForm = ({ type, entries, onChange }) => {
       {!isAdding && (
         <Button
           onClick={() => setIsAdding(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-5 py-2 transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
         >
           Add New {type}
         </Button>
       )}
-      </div>
     </div>
   );
+
 };
 
 export default EntryForm;

@@ -58,7 +58,7 @@ export default function CoverLetterList({ coverLetters }) {
       {coverLetters.map((letter) => (
         <Card
           key={letter.id}
-          className="rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md bg-white dark:bg-gray-900 transition hover:shadow-lg"
+          className="bg-gray-800 border border-gray-700 rounded-xl"
         >
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between">
