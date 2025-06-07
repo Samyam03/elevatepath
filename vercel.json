@@ -10,5 +10,7 @@
       "env": {
         "PRISMA_GENERATE_IN_POSTINSTALL": "true"
       }
-    }
-  }
+    },
+    "installCommand": "npm install",
+    "buildCommand": "prisma generate && next build"
+}
