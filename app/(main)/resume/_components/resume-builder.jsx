@@ -80,7 +80,6 @@ export default function ResumeBuilder({ initialContent }) {
     if (initialContent) setActiveTab("preview");
   }, [initialContent]);
 
-  // Update preview content when form values change
   useEffect(() => {
     if (activeTab === "edit") {
       const newContent = getCombinedContent();
@@ -88,7 +87,6 @@ export default function ResumeBuilder({ initialContent }) {
     }
   }, [formValues, activeTab]);
 
-  // Handle save result
   useEffect(() => {
     if (saveResult && !isSaving) {
       toast.success("Resume saved successfully!");
@@ -101,7 +99,7 @@ export default function ResumeBuilder({ initialContent }) {
   useEffect(() => {
     if (deleteResult && !isDeleting) {
       toast.success("Resume deleted successfully!");
-      setPreviewContent(""); // Clear preview content
+      setPreviewContent("");
     }
     if (deleteError) {
       toast.error(deleteError.message || "Failed to delete resume");
@@ -140,7 +138,6 @@ export default function ResumeBuilder({ initialContent }) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePDF = async () => {
-    // Check if resume is empty
     if (!previewContent || !previewContent.trim()) {
       toast.error("Resume is empty. Please add content before downloading.");
       return;
@@ -169,7 +166,6 @@ export default function ResumeBuilder({ initialContent }) {
 
   const onSubmit = async (data) => {
     try {
-      // Check if resume is empty
       if (!previewContent || !previewContent.trim()) {
         toast.error("Resume is empty. Please add content before saving.");
         return;
@@ -187,32 +183,32 @@ export default function ResumeBuilder({ initialContent }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white py-10 px-4 md:px-8 lg:px-16">
-      <div className="max-w-7xl mx-auto space-y-10">
-        <header className="text-center">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
+    <div className="min-h-screen bg-gray-950 text-white py-6 sm:py-8 md:py-10 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-10">
+        <header className="text-center px-2 sm:px-0">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-1 sm:mb-2">
             Resume Builder
           </h1>
-          <p className="text-gray-400 text-sm md:text-base">
+          <p className="text-gray-400 text-xs sm:text-sm md:text-base">
             Craft and customize your professional resume
           </p>
         </header>
-  
-        <div className="flex gap-4">
+
+        <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 justify-center sm:justify-start">
           <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 disabled={isSaving}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                className="bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
               >
                 {isSaving ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
+                    <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Save
                   </>
                 )}
@@ -231,27 +227,27 @@ export default function ResumeBuilder({ initialContent }) {
                   await handleSubmit(onSubmit)();
                 }}
                 disabled={isSaving}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 text-whtie cursor-pointer"
               >
                 Confirm Save
               </Button>
             </DialogContent>
           </Dialog>
-  
+
           <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
                 disabled={isGenerating}
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     Generating PDF...
                   </>
                 ) : (
                   <>
-                    <Download className="mr-2 h-4 w-4" />
+                    <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Download PDF
                   </>
                 )}
@@ -270,27 +266,27 @@ export default function ResumeBuilder({ initialContent }) {
                   await generatePDF();
                 }}
                 disabled={isGenerating}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
               >
                 Confirm Download
               </Button>
             </DialogContent>
           </Dialog>
-  
+
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button
-                className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-4 py-2 text-sm shadow disabled:opacity-50"
+                className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
                 disabled={isDeleting}
               >
                 {isDeleting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                     Deleting...
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    <AlertTriangle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Clear Resume
                   </>
                 )}
@@ -309,103 +305,103 @@ export default function ResumeBuilder({ initialContent }) {
                   await deleteResumeFn();
                 }}
                 disabled={isDeleting}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
               >
                 Confirm Clear
               </Button>
             </DialogContent>
           </Dialog>
         </div>
-  
+
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="space-y-4"
+          className="space-y-3 sm:space-y-4"
         >
-          <TabsList className="flex gap-2 bg-gray-900 border border-gray-800">
+          <TabsList className="flex gap-1 sm:gap-2 bg-gray-900 border border-gray-800 p-1">
             <TabsTrigger 
               value="edit" 
-              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 cursor-pointer"
             >
               Form
             </TabsTrigger>
             <TabsTrigger 
               value="preview"
-              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white"
+              className="data-[state=active]:bg-gray-800 data-[state=active]:text-white text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 cursor-pointer"
             >
               Markdown
             </TabsTrigger>
           </TabsList>
-  
-          <TabsContent value="edit" className="space-y-8">
+
+          <TabsContent value="edit" className="space-y-4 sm:space-y-6">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="p-6 bg-gray-900 border border-gray-800 rounded-2xl shadow space-y-8"
+              className="p-4 sm:p-6 bg-gray-900 border border-gray-800 rounded-xl sm:rounded-2xl shadow space-y-4 sm:space-y-6"
             >
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-white">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Contact Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block mb-1 text-gray-300">Email</label>
+                    <label className="block mb-1 text-sm sm:text-base text-gray-300">Email</label>
                     <Input
                       {...register("contactInfo.email")}
                       type="email"
                       placeholder="your@email.com"
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base h-9 sm:h-10"
                     />
                     {errors.contactInfo?.email && (
-                      <p className="text-red-400 text-sm">
+                      <p className="text-red-400 text-xs sm:text-sm">
                         {errors.contactInfo.email.message}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="block mb-1 text-gray-300">Mobile Number</label>
+                    <label className="block mb-1 text-sm sm:text-base text-gray-300">Mobile Number</label>
                     <Input
                       {...register("contactInfo.mobile")}
                       type="tel"
                       placeholder="+1 234 567 8900"
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base h-9 sm:h-10"
                     />
                     {errors.contactInfo?.mobile && (
-                      <p className="text-red-400 text-sm">
+                      <p className="text-red-400 text-xs sm:text-sm">
                         {errors.contactInfo.mobile.message}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="block mb-1 text-gray-300">LinkedIn URL</label>
+                    <label className="block mb-1 text-sm sm:text-base text-gray-300">LinkedIn URL</label>
                     <Input
                       {...register("contactInfo.linkedin")}
                       type="url"
                       placeholder="https://linkedin.com/in/your-profile"
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base h-9 sm:h-10"
                     />
                     {errors.contactInfo?.linkedin && (
-                      <p className="text-red-400 text-sm">
+                      <p className="text-red-400 text-xs sm:text-sm">
                         {errors.contactInfo.linkedin.message}
                       </p>
                     )}
                   </div>
                   <div>
-                    <label className="block mb-1 text-gray-300">Twitter/X Profile</label>
+                    <label className="block mb-1 text-sm sm:text-base text-gray-300">Twitter/X Profile</label>
                     <Input
                       {...register("contactInfo.twitter")}
                       type="url"
                       placeholder="https://twitter.com/your-handle"
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base h-9 sm:h-10"
                     />
                     {errors.contactInfo?.twitter && (
-                      <p className="text-red-400 text-sm">
+                      <p className="text-red-400 text-xs sm:text-sm">
                         {errors.contactInfo.twitter.message}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
-  
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Professional Summary</h3>
+
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Professional Summary</h3>
                 <Controller
                   name="summary"
                   control={control}
@@ -413,17 +409,17 @@ export default function ResumeBuilder({ initialContent }) {
                     <Textarea
                       {...field}
                       placeholder="Write a compelling professional summary..."
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base min-h-[100px] sm:min-h-[120px]"
                     />
                   )}
                 />
                 {errors.summary && (
-                  <p className="text-red-400 text-sm">{errors.summary.message}</p>
+                  <p className="text-red-400 text-xs sm:text-sm">{errors.summary.message}</p>
                 )}
               </div>
-  
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Skills</h3>
+
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Skills</h3>
                 <Controller
                   name="skills"
                   control={control}
@@ -431,17 +427,17 @@ export default function ResumeBuilder({ initialContent }) {
                     <Textarea 
                       {...field} 
                       placeholder="List your key skills..." 
-                      className="bg-gray-800 border-gray-700 text-white"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base min-h-[100px] sm:min-h-[120px]"
                     />
                   )}
                 />
                 {errors.skills && (
-                  <p className="text-red-400 text-sm">{errors.skills.message}</p>
+                  <p className="text-red-400 text-xs sm:text-sm">{errors.skills.message}</p>
                 )}
               </div>
-  
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Work Experience</h3>
+
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Work Experience</h3>
                 <Controller
                   name="experience"
                   control={control}
@@ -454,14 +450,14 @@ export default function ResumeBuilder({ initialContent }) {
                   )}
                 />
                 {errors.experience && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-xs sm:text-sm">
                     {errors.experience.message}
                   </p>
                 )}
               </div>
-  
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Education</h3>
+
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Education</h3>
                 <Controller
                   name="education"
                   control={control}
@@ -474,14 +470,14 @@ export default function ResumeBuilder({ initialContent }) {
                   )}
                 />
                 {errors.education && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-xs sm:text-sm">
                     {errors.education.message}
                   </p>
                 )}
               </div>
-  
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">Projects</h3>
+
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="text-lg sm:text-xl font-semibold text-white">Projects</h3>
                 <Controller
                   name="projects"
                   control={control}
@@ -494,24 +490,24 @@ export default function ResumeBuilder({ initialContent }) {
                   )}
                 />
                 {errors.projects && (
-                  <p className="text-red-400 text-sm">
+                  <p className="text-red-400 text-xs sm:text-sm">
                     {errors.projects.message}
                   </p>
                 )}
               </div>
             </form>
           </TabsContent>
-  
-          <TabsContent value="preview" className="space-y-6">
+
+          <TabsContent value="preview" className="space-y-4 sm:space-y-6">
             {activeTab === "preview" && resumeMode !== "preview" && (
-              <div className="flex items-center gap-2 bg-yellow-900 text-yellow-200 p-2 rounded-md">
-                <AlertTriangle className="h-4 w-4" />
+              <div className="flex items-center gap-2 bg-yellow-900 text-yellow-200 p-2 rounded-md text-xs sm:text-sm">
+                <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>
                   You will lose edited markdown if you update the form data.
                 </span>
               </div>
             )}
-  
+
             {activeTab === "preview" && (
               <Button
                 variant="outline"
@@ -519,32 +515,33 @@ export default function ResumeBuilder({ initialContent }) {
                 onClick={() =>
                   setResumeMode(resumeMode === "preview" ? "edit" : "preview")
                 }
-                className="text-sm bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
+                className="text-xs sm:text-sm bg-gray-800 text-white hover:bg-gray-700 border-gray-700 px-2 py-1 sm:px-3 sm:py-1.5 cursor-pointer"
               >
                 {resumeMode === "preview" ? (
                   <>
-                    <Edit className="mr-2 h-4 w-4" />
+                    <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Edit Resume
                   </>
                 ) : (
                   <>
-                    <Monitor className="mr-2 h-4 w-4" />
+                    <Monitor className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Show Preview
                   </>
                 )}
               </Button>
             )}
-  
+
             <div className="border border-gray-800 rounded-md overflow-hidden">
               <MDEditor
                 value={previewContent}
                 onChange={setPreviewContent}
-                height={800}
+                height={600}
                 preview={resumeMode}
                 data-color-mode="dark"
+                className="text-sm sm:text-base"
               />
             </div>
-  
+
             <div className="hidden" id="resume-pdf">
               <MDEditor.Markdown source={previewContent} />
             </div>

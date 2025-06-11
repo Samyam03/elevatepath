@@ -36,8 +36,8 @@ const QuizList = ({ assessments }) => {
             </CardDescription>
           </div>
           <Button
-            onClick={() => router.push("/interview/mock")}
-            className="transition duration-200 hover:scale-105"
+            onClick={() => router.push("/interview/quiz")}
+            className="transition duration-200 hover:scale-105 cursor-pointer"
           >
             Start New Quiz
           </Button>
@@ -99,7 +99,7 @@ const QuizList = ({ assessments }) => {
                 hideStartNew
                 onStartNew={() => {
                   setSelectedQuiz(null);
-                  router.push("/interview/mock");
+                  router.push("/interview/quiz");
                 }}
               />
             </div>

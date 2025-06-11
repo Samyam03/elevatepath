@@ -114,7 +114,7 @@ const EntryForm = ({ type, entries, onChange }) => {
               variant="ghost"
               size="sm"
               onClick={() => handleDelete(index)}
-              className="text-gray-400 hover:text-red-500"
+              className="text-gray-400 hover:text-red-500 cursor-pointer"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -221,7 +221,7 @@ const EntryForm = ({ type, entries, onChange }) => {
               size="sm"
               onClick={handleImproveDescription}
               disabled={isImproving || !watch("description")}
-              className="text-blue-400 hover:text-blue-300"
+              className="text-blue-400 hover:text-blue-300 cursor-pointer"
             >
               {isImproving ? (
                 <>
@@ -243,13 +243,13 @@ const EntryForm = ({ type, entries, onChange }) => {
                 reset();
                 setIsAdding(false);
               }}
-              className="text-gray-300 border-gray-600 hover:bg-gray-700"
+              className="text-gray-300 border-gray-600 hover:bg-gray-700 cursor-pointer"
             >
               Cancel
             </Button>
             <Button
               onClick={handleAdd}
-              className="bg-blue-600 hover:bg-blue-700  text-white"
+              className="bg-blue-600 hover:bg-blue-700  text-white cursor-pointer"
             >
               Add
             </Button>
@@ -260,7 +260,7 @@ const EntryForm = ({ type, entries, onChange }) => {
       {!isAdding && (
         <Button
           onClick={() => setIsAdding(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
         >
           Add New {type}
         </Button>

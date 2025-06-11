@@ -134,7 +134,7 @@ export default function CoverLetterGenerator() {
               <Button
                 type="submit"
                 disabled={generating}
-                className="px-6 py-2 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors rounded-md"
+                className="px-6 py-2 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-300 transition-colors rounded-md cursor-pointer"
               >
                 {generating ? (
                   <>

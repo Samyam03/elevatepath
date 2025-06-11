@@ -75,7 +75,7 @@ export default function CoverLetterList({ coverLetters }) {
                   variant="outline"
                   size="icon"
                   onClick={() => router.push(`/cover-letter/${letter.id}`)}
-                  className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
                 >
                   <Eye className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                 </Button>
@@ -84,7 +84,7 @@ export default function CoverLetterList({ coverLetters }) {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900"
+                      className="border-gray-300 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900 cursor-pointer"
                     >
                       <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
                     </Button>

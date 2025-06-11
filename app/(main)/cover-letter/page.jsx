@@ -20,7 +20,7 @@ export default async function CoverLetterPage() {
             </p>
           </div>
           <Link href="/cover-letter/new">
-            <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">
               <Plus className="h-4 w-4" />
               <span className="text-sm font-medium">Create New</span>
             </Button>

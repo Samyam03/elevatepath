@@ -9,7 +9,7 @@ import Quiz from "../_components/quiz";
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 flex items-center space-x-2">
           <Link href="/interview">
-            <Button variant="link" className="flex items-center gap-2 text-sm">
+            <Button variant="link" className="flex items-center gap-2 text-sm cursor-pointer">
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Interview Preparation</span>
             </Button>

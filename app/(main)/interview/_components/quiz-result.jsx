@@ -79,7 +79,7 @@ const QuizResult = ({ result, hideStartNew = false, onStartNew }) => {
       {/* BUTTON */}
       {!hideStartNew && (
         <div className="flex justify-end pt-2">
-          <Button onClick={onStartNew} className="px-6 py-2 text-sm rounded-xl">
+          <Button onClick={onStartNew} className="px-6 py-2 text-sm rounded-xl cursor-pointer">
             Start New Quiz
           </Button>
         </div>

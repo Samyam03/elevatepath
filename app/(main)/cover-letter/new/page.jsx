@@ -11,7 +11,7 @@ export default function NewCoverLetterPage() {
           <Link href="/cover-letter" className="group w-max">
             <Button 
               variant="ghost" 
-              className="pl-0 text-gray-400 hover:text-white transition-all duration-200 group-hover:pl-2"
+              className="pl-0 text-gray-400 hover:text-white transition-all duration-200 group-hover:pl-2 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4 mr-2 transition-all duration-200 group-hover:mr-3" />
               <span className="text-sm font-medium">

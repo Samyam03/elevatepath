@@ -123,7 +123,7 @@ const Quiz = () => {
         <CardFooter className="flex justify-end">
           <Button
             onClick={generateQuizFn}
-            className="bg-blue-600 hover:bg-blue-700 text-white transition-all"
+            className="bg-blue-600 hover:bg-blue-700 text-white transition-all cursor-pointer"
           >
             Start Quiz
           </Button>
@@ -188,7 +188,7 @@ const Quiz = () => {
             onClick={() => setShowExplanation(true)}
             variant="outline"
             disabled={!answers[currentQuestion]}
-            className="w-full sm:w-auto border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-800"
+            className="w-full sm:w-auto border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-800 cursor-pointer"
           >
             Show Explanation
           </Button>
@@ -196,7 +196,7 @@ const Quiz = () => {
         <Button
           onClick={handleNext}
           disabled={!answers[currentQuestion] || savingResult}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-all"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white transition-all cursor-pointer"
         >
           {savingResult ? (
             currentQuestion === quizData.length - 1 ? (
