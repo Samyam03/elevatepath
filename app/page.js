@@ -123,7 +123,7 @@ export default function Home() {
             Frequently Asked Questions
           </h2>
           <p className="text-sm sm:text-md text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Got questions? We've got answers to help you get the most out of ElevatePath.
+            Got questions? We&apos;ve got answers to help you get the most out of ElevatePath.
           </p>
 
           <Accordion type="single" collapsible className="w-full text-left mt-6 sm:mt-8">
