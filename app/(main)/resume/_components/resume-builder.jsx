@@ -32,6 +32,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { marked } from 'marked';
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");
@@ -145,17 +146,73 @@ export default function ResumeBuilder({ initialContent }) {
 
     setIsGenerating(true);
     try {
-      const html2pdf = (await import("html2pdf.js")).default;
-      const element = document.getElementById("resume-pdf");
-      const opt = {
-        margin: [15, 15],
-        filename: "resume.pdf",
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      };
+      const jsPDF = (await import('jspdf')).default;
+      const html2canvas = (await import('html2canvas')).default;
 
-      await html2pdf().set(opt).from(element).save();
+      // Create a temporary container for A4 PDF rendering
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '794px'; // A4 width at 96dpi
+      tempContainer.style.minHeight = '1123px'; // A4 height at 96dpi
+      tempContainer.style.background = 'white';
+      tempContainer.style.color = 'black';
+      tempContainer.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      tempContainer.style.fontSize = '13px';
+      tempContainer.style.lineHeight = '1.6';
+      tempContainer.style.padding = '40px 48px'; // 20mm left/right, 15mm top/bottom
+      tempContainer.style.boxSizing = 'border-box';
+      tempContainer.style.overflow = 'hidden';
+
+      // Use marked to convert markdown to HTML
+      tempContainer.innerHTML = `
+        <div class="resume-pdf-a4">
+          ${marked.parse(previewContent)}
+        </div>
+      `;
+
+      // Add print-friendly CSS for headings, lists, etc.
+      const style = document.createElement('style');
+      style.innerHTML = `
+        .resume-pdf-a4 h1 { font-size: 2.1em; font-weight: bold; margin: 0 0 0.5em 0; text-align: center; border-bottom: 2px solid #222; padding-bottom: 0.2em; }
+        .resume-pdf-a4 h2 { font-size: 1.4em; font-weight: bold; margin: 1.2em 0 0.5em 0; border-bottom: 1px solid #aaa; padding-bottom: 0.1em; }
+        .resume-pdf-a4 h3 { font-size: 1.1em; font-weight: bold; margin: 1em 0 0.3em 0; }
+        .resume-pdf-a4 ul, .resume-pdf-a4 ol { margin: 0.5em 0 0.5em 2em; }
+        .resume-pdf-a4 li { margin-bottom: 0.2em; }
+        .resume-pdf-a4 strong { font-weight: bold; }
+        .resume-pdf-a4 em { font-style: italic; }
+        .resume-pdf-a4 a { color: #0066cc; text-decoration: underline; }
+        .resume-pdf-a4 table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        .resume-pdf-a4 th, .resume-pdf-a4 td { border: 1px solid #ccc; padding: 4px 8px; }
+        .resume-pdf-a4 blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding-left: 1em; color: #555; }
+        .resume-pdf-a4 code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-size: 0.95em; }
+      `;
+      tempContainer.appendChild(style);
+
+      document.body.appendChild(tempContainer);
+
+      // Wait for the browser to render the content
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Convert to canvas
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794,
+        height: 1123,
+      });
+
+      document.body.removeChild(tempContainer);
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'pt', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 595, 842); // 595x842pt is A4
+      pdf.save('resume.pdf');
+      toast.success("PDF downloaded successfully!");
     } catch (error) {
       console.error("PDF generation error:", error);
       toast.error("Failed to generate PDF. Please try again.");
@@ -542,9 +599,7 @@ export default function ResumeBuilder({ initialContent }) {
               />
             </div>
 
-            <div className="hidden" id="resume-pdf">
-              <MDEditor.Markdown source={previewContent} />
-            </div>
+
           </TabsContent>
         </Tabs>
       </div>
