@@ -42,12 +42,14 @@ export default function ResumeBuilder({ initialContent }) {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isResumeSaved, setIsResumeSaved] = useState(!!initialContent);
 
   const {
     control,
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(resumeSchema),
@@ -77,9 +79,179 @@ export default function ResumeBuilder({ initialContent }) {
 
   const formValues = watch();
 
+  // Function to parse markdown content back to form data
+  const parseMarkdownToFormData = (markdown) => {
+    if (!markdown) return null;
+
+    const formData = {
+      contactInfo: {},
+      summary: "",
+      skills: "",
+      experience: [],
+      education: [],
+      projects: [],
+    };
+
+    try {
+      const lines = markdown.split('\n');
+      let currentSection = '';
+      let currentEntry = null;
+      let currentList = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        // Parse contact info from the contact section
+        if (line.includes('📧') || line.includes('📱') || line.includes('💼') || line.includes('🐦')) {
+          // Extract email
+          const emailMatch = line.match(/📧\s*([^\s|]+)/);
+          if (emailMatch) formData.contactInfo.email = emailMatch[1];
+          
+          // Extract mobile
+          const mobileMatch = line.match(/📱\s*([^\s|]+)/);
+          if (mobileMatch) formData.contactInfo.mobile = mobileMatch[1];
+          
+          // Extract LinkedIn
+          const linkedinMatch = line.match(/💼\s*\[LinkedIn\]\(([^)]+)\)/);
+          if (linkedinMatch) formData.contactInfo.linkedin = linkedinMatch[1];
+          
+          // Extract Twitter
+          const twitterMatch = line.match(/🐦\s*\[Twitter\]\(([^)]+)\)/);
+          if (twitterMatch) formData.contactInfo.twitter = twitterMatch[1];
+        }
+        
+        // Parse sections
+        else if (line.startsWith('## Professional Summary')) {
+          currentSection = 'summary';
+          currentList = [];
+        }
+        else if (line.startsWith('## Skills')) {
+          currentSection = 'skills';
+          currentList = [];
+        }
+        else if (line.startsWith('## Work Experience')) {
+          // Save previous section's data before switching
+          if (currentSection === 'experience' && currentList.length > 0) {
+            formData.experience = [...currentList];
+          }
+          currentSection = 'experience';
+          currentList = [];
+        }
+        else if (line.startsWith('## Education')) {
+          // Save previous section's data before switching
+          if (currentSection === 'experience' && currentList.length > 0) {
+            formData.experience = [...currentList];
+          } else if (currentSection === 'education' && currentList.length > 0) {
+            formData.education = [...currentList];
+          }
+          currentSection = 'education';
+          currentList = [];
+        }
+        else if (line.startsWith('## Projects')) {
+          // Save previous section's data before switching
+          if (currentSection === 'experience' && currentList.length > 0) {
+            formData.experience = [...currentList];
+          } else if (currentSection === 'education' && currentList.length > 0) {
+            formData.education = [...currentList];
+          } else if (currentSection === 'projects' && currentList.length > 0) {
+            formData.projects = [...currentList];
+          }
+          currentSection = 'projects';
+          currentList = [];
+        }
+        else if (line.startsWith('### ')) {
+          // This is a job/education/project title
+          if (currentEntry) {
+            currentList.push(currentEntry);
+          }
+          
+          // Parse title and organization from format: "### Title @ Organization"
+          const titleOrgMatch = line.match(/### (.+?) @ (.+)/);
+          if (titleOrgMatch) {
+            currentEntry = {
+              title: titleOrgMatch[1],
+              organization: titleOrgMatch[2],
+              startDate: '',
+              endDate: '',
+              description: '',
+              current: false
+            };
+          } else {
+            // Fallback if format doesn't match
+            currentEntry = {
+              title: line.substring(4),
+              organization: '',
+              startDate: '',
+              endDate: '',
+              description: '',
+              current: false
+            };
+          }
+        }
+        else if (line.match(/^\d{4}\s*-\s*(Present|\d{4})/) && currentEntry) {
+          // Parse date range
+          const dateMatch = line.match(/(\d{4})\s*-\s*(Present|\d{4})/);
+          if (dateMatch) {
+            currentEntry.startDate = dateMatch[1];
+            currentEntry.endDate = dateMatch[2];
+            currentEntry.current = dateMatch[2] === 'Present';
+          }
+        }
+        else if (line && currentEntry && !line.startsWith('##') && !line.startsWith('###')) {
+          // This is description content
+          if (currentEntry.description) {
+            currentEntry.description += '\n' + line;
+          } else {
+            currentEntry.description = line;
+          }
+        }
+        else if (line && currentSection === 'summary' && !line.startsWith('##')) {
+          formData.summary += (formData.summary ? '\n' : '') + line;
+        }
+        else if (line && currentSection === 'skills' && !line.startsWith('##')) {
+          formData.skills += (formData.skills ? '\n' : '') + line;
+        }
+      }
+
+      // Add the last entry
+      if (currentEntry) {
+        currentList.push(currentEntry);
+      }
+
+      // Save the final section's data
+      if (currentSection === 'experience' && currentList.length > 0) {
+        formData.experience = [...currentList];
+      } else if (currentSection === 'education' && currentList.length > 0) {
+        formData.education = [...currentList];
+      } else if (currentSection === 'projects' && currentList.length > 0) {
+        formData.projects = [...currentList];
+      }
+
+      return formData;
+    } catch (error) {
+      console.error('Error parsing markdown:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
-    if (initialContent) setActiveTab("preview");
-  }, [initialContent]);
+    if (initialContent) {
+      setActiveTab("preview");
+      // Parse saved content and populate form
+      const parsedData = parseMarkdownToFormData(initialContent);
+      if (parsedData) {
+        console.log('Parsed data:', parsedData); // Debug log
+        // Reset form with parsed data
+        Object.keys(parsedData).forEach(key => {
+          if (parsedData[key] !== undefined) {
+            setValue(key, parsedData[key]);
+          }
+        });
+        // Set resume as saved since we have initial content
+        setIsResumeSaved(true);
+      }
+    }
+  }, [initialContent, setValue]);
 
   useEffect(() => {
     if (activeTab === "edit") {
@@ -91,6 +263,7 @@ export default function ResumeBuilder({ initialContent }) {
   useEffect(() => {
     if (saveResult && !isSaving) {
       toast.success("Resume saved successfully!");
+      setIsResumeSaved(true);
     }
     if (saveError) {
       toast.error(saveError.message || "Failed to save resume");
@@ -101,6 +274,7 @@ export default function ResumeBuilder({ initialContent }) {
     if (deleteResult && !isDeleting) {
       toast.success("Resume deleted successfully!");
       setPreviewContent("");
+      setIsResumeSaved(false);
     }
     if (deleteError) {
       toast.error(deleteError.message || "Failed to delete resume");
@@ -291,64 +465,67 @@ export default function ResumeBuilder({ initialContent }) {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
-                disabled={isGenerating}
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    Generating PDF...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    Download PDF
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-gray-900 text-white border-gray-800">
-              <DialogHeader>
-                <DialogTitle>Download Resume PDF?</DialogTitle>
-                <DialogDescription className="text-gray-400">
-                  This will generate a PDF of your current resume.
-                </DialogDescription>
-              </DialogHeader>
-              <Button
-                onClick={async () => {
-                  setDownloadDialogOpen(false);
-                  await generatePDF();
-                }}
-                disabled={isGenerating}
-                className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
-              >
-                Confirm Download
-              </Button>
-            </DialogContent>
-          </Dialog>
+          {isResumeSaved && (
+            <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      Download PDF
+                    </>
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-gray-900 text-white border-gray-800">
+                <DialogHeader>
+                  <DialogTitle>Download Resume PDF?</DialogTitle>
+                  <DialogDescription className="text-gray-400">
+                    This will generate a PDF of your current resume.
+                  </DialogDescription>
+                </DialogHeader>
+                <Button
+                  onClick={async () => {
+                    setDownloadDialogOpen(false);
+                    await generatePDF();
+                  }}
+                  disabled={isGenerating}
+                  className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                >
+                  Confirm Download
+                </Button>
+              </DialogContent>
+            </Dialog>
+          )}
 
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                    Clear Resume
-                  </>
-                )}
-              </Button>
-            </DialogTrigger>
+          {isResumeSaved && (
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm shadow disabled:opacity-50 cursor-pointer"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                      Clear Resume
+                    </>
+                  )}
+                </Button>
+              </DialogTrigger>
             <DialogContent className="bg-gray-900 text-white border-gray-800">
               <DialogHeader>
                 <DialogTitle>Clear Resume?</DialogTitle>
@@ -368,6 +545,7 @@ export default function ResumeBuilder({ initialContent }) {
               </Button>
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         <Tabs
