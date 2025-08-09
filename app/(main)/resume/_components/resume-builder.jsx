@@ -349,6 +349,7 @@ export default function ResumeBuilder({ initialContent }) {
       // Add print-friendly CSS for headings, lists, etc.
       const style = document.createElement('style');
       style.innerHTML = `
+        .resume-pdf-a4 { width: 100%; }
         .resume-pdf-a4 h1 { font-size: 2.1em; font-weight: bold; margin: 0 0 0.5em 0; text-align: center; border-bottom: 2px solid #222; padding-bottom: 0.2em; }
         .resume-pdf-a4 h2 { font-size: 1.4em; font-weight: bold; margin: 1.2em 0 0.5em 0; border-bottom: 1px solid #aaa; padding-bottom: 0.1em; }
         .resume-pdf-a4 h3 { font-size: 1.1em; font-weight: bold; margin: 1em 0 0.3em 0; }
@@ -361,6 +362,7 @@ export default function ResumeBuilder({ initialContent }) {
         .resume-pdf-a4 th, .resume-pdf-a4 td { border: 1px solid #ccc; padding: 4px 8px; }
         .resume-pdf-a4 blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding-left: 1em; color: #555; }
         .resume-pdf-a4 code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-size: 0.95em; }
+        .resume-pdf-a4 p { margin: 0.35em 0; }
       `;
       tempContainer.appendChild(style);
 
@@ -368,6 +370,31 @@ export default function ResumeBuilder({ initialContent }) {
 
       // Wait for the browser to render the content
       await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Scale-to-fit: ensure the entire content fits within one A4 page
+      const availableWidth = 794 - (48 * 2);  // account for horizontal padding
+      const availableHeight = 1123 - (40 * 2); // account for vertical padding
+      const contentEl = tempContainer.querySelector('.resume-pdf-a4');
+      if (contentEl) {
+        // Ensure base width before measuring
+        contentEl.style.width = availableWidth + 'px';
+
+        // Let layout settle
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        const contentHeight = contentEl.scrollHeight;
+        const contentWidth = contentEl.scrollWidth;
+
+        // Determine scale factor constrained by width and height
+        let scale = Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
+
+        if (scale < 1) {
+          contentEl.style.transformOrigin = 'top left';
+          contentEl.style.transform = `scale(${scale})`;
+          // Expand base width so the scaled width fills available space
+          contentEl.style.width = (availableWidth / scale) + 'px';
+        }
+      }
 
       // Convert to canvas
       const canvas = await html2canvas(tempContainer, {
