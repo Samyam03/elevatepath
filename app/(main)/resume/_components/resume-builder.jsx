@@ -101,6 +101,13 @@ export default function ResumeBuilder({ initialContent }) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         
+        // Parse name from the centered H2 line if present
+        const nameMatch = line.match(/^##\s*<div\s+align="center">(.+)<\/div>$/i);
+        if (nameMatch) {
+          formData.contactInfo.name = nameMatch[1];
+          continue;
+        }
+
         // Parse contact info from the contact section
         if (line.includes('📧') || line.includes('📱') || line.includes('💼') || line.includes('🐦')) {
           // Extract email
@@ -290,10 +297,14 @@ export default function ResumeBuilder({ initialContent }) {
       parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
     if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
 
-    return parts.length > 0
-      ? `## <div align="center">${user.fullName}</div>
-        \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
+    const nameLine = contactInfo.name || user.fullName;
+    if (!nameLine && parts.length === 0) return "";
+
+    const contactLines = parts.length > 0
+      ? `\n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
       : "";
+
+    return `## <div align="center">${nameLine || ""}</div>${contactLines}`;
   };
 
   const getCombinedContent = () => {
@@ -603,6 +614,20 @@ export default function ResumeBuilder({ initialContent }) {
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-lg sm:text-xl font-semibold text-white">Contact Information</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block mb-1 text-sm sm:text-base text-gray-300">Full Name</label>
+                    <Input
+                      {...register("contactInfo.name")}
+                      type="text"
+                      placeholder="Your full name"
+                      className="bg-gray-800 border-gray-700 text-white text-sm sm:text-base h-9 sm:h-10"
+                    />
+                    {errors.contactInfo?.name && (
+                      <p className="text-red-400 text-xs sm:text-sm">
+                        {errors.contactInfo.name.message}
+                      </p>
+                    )}
+                  </div>
                   <div>
                     <label className="block mb-1 text-sm sm:text-base text-gray-300">Email</label>
                     <Input
