@@ -7,6 +7,7 @@ import {
   TrendingDown,
   TrendingUp,
   Brain,
+  Edit,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import {
   BarChart,
   Bar,
@@ -26,8 +28,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useRouter } from 'next/navigation';
 
 const DashboardView = ({ insights }) => {
+  const router = useRouter();
   const salaryData = insights.salaryRanges.map((item) => ({
     name: item.role,
     min: item.min / 1000,
@@ -79,12 +83,27 @@ const DashboardView = ({ insights }) => {
     addSuffix: true,
   });
 
+  const handleEditProfile = () => {
+    router.push('/onboarding/edit');
+  };
+
   return (
     <div className="space-y-6 p-4 lg:p-8 text-foreground">
-      <div className="text-sm">
-        <Badge className="bg-background border border-muted text-muted-foreground shadow-sm">
-          Last updated: {lastUpdateDate}
-        </Badge>
+      <div className="flex justify-between items-center">
+        <div className="text-sm">
+          <Badge className="bg-background border border-muted text-muted-foreground shadow-sm">
+            Last updated: {lastUpdateDate}
+          </Badge>
+        </div>
+        <Button 
+          onClick={handleEditProfile}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Edit className="w-4 h-4" />
+          Edit Profile
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

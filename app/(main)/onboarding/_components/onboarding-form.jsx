@@ -26,11 +26,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import useFetch from "@/components/hooks/use-fetch";
-import { updateUser } from "@/actions/user";
+import { updateUser, getUser } from "@/actions/user";
 import { toast } from "sonner";
 
-const OnboardingForm = ({ industries }) => {
+const OnboardingForm = ({ industries, isEditing = false }) => {
   const [selectedIndustry, setSelectedIndustry] = useState(null);
+  const [isLoading, setIsLoading] = useState(isEditing);
   const router = useRouter();
 
   const  {
@@ -45,6 +46,7 @@ const OnboardingForm = ({ industries }) => {
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -56,7 +58,43 @@ const OnboardingForm = ({ industries }) => {
     },
   });
 
+  // Load existing user data if editing
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (isEditing) {
+        try {
+          const userData = await getUser();
+          
+          // Parse industry and subIndustry from the stored format
+          const industryParts = userData.industry?.split(' - ') || [];
+          const industryId = industryParts[0]?.replace(/-/g, ' ');
+          const subIndustry = industryParts[1]?.replace(/-/g, ' ') || '';
+          
+          // Find the industry object
+          const industry = industries.find(i => 
+            i.name.toLowerCase() === industryId?.toLowerCase()
+          );
+          
+          if (industry) {
+            setSelectedIndustry(industry);
+            setValue("industry", industry.id);
+            setValue("subIndustry", subIndustry);
+          }
+          
+          setValue("experience", userData.experience?.toString() || "");
+          setValue("skills", userData.skills || "");
+          setValue("bio", userData.bio || "");
+        } catch (error) {
+          console.error("Error loading user data:", error);
+          toast.error("Failed to load profile data");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
 
+    loadUserData();
+  }, [isEditing, industries, setValue]);
 
   const onSubmit = async (values) => {
     try{
@@ -76,24 +114,39 @@ const OnboardingForm = ({ industries }) => {
 
   useEffect(() => {
     if (updateResult?.success && !updateLoading) {
-      toast("Profile updated successfully:", updateResult);
+      toast.success(isEditing ? "Profile updated successfully!" : "Profile completed successfully!");
       router.push("/dashboard");
       router.refresh();
     }
-  }, [updateResult, updateLoading]);
+  }, [updateResult, updateLoading, isEditing, router]);
 
   const watchIndustry = watch("industry");
+
+  if (isLoading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-10">
+        <Card className="shadow-xl rounded-2xl border">
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin h-8 w-8" />
+            <span className="ml-2">Loading profile data...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
       <Card className="shadow-xl rounded-2xl border">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
-            Complete Your Profile
+            {isEditing ? "Edit Your Profile" : "Complete Your Profile"}
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            Help us tailor your experience by telling us a bit about your
-            background.
+            {isEditing 
+              ? "Update your profile information to keep it current."
+              : "Help us tailor your experience by telling us a bit about your background."
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -214,7 +267,7 @@ const OnboardingForm = ({ industries }) => {
                     Saving...
                   </>
                 ) : (
-                  "Complete Profile"
+                  isEditing ? "Update Profile" : "Complete Profile"
                 )}
               </Button>
             </div>
