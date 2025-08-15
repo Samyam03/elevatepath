@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { experienceSchema } from '@/app/lib/schema';
+import { projectSchema } from '@/app/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import useFetch from '@/components/hooks/use-fetch';
 import { improveWithAI } from "@/actions/resume";
-import { Sparkles, Loader2, X } from 'lucide-react';
+import { Sparkles, Loader2, X, ExternalLink } from 'lucide-react';
 import { toast } from "sonner";
 import { parse, format } from 'date-fns';
 
@@ -26,7 +26,7 @@ const formatDisplayDate = (dateString) => {
   return format(date, "MMM yyyy");
 };
 
-const ExperienceForm = ({ entries, onChange }) => {
+const ProjectForm = ({ entries, onChange }) => {
   const [isAdding, setIsAdding] = useState(false);
 
   const {
@@ -37,13 +37,14 @@ const ExperienceForm = ({ entries, onChange }) => {
     watch,
     setValue,
   } = useForm({
-    resolver: zodResolver(experienceSchema),
+    resolver: zodResolver(projectSchema),
     defaultValues: {
       title: '',
-      organization: '',
+      technologies: '',
       startDate: '',
       endDate: '',
       description: '',
+      link: '',
       current: false,
     },
   });
@@ -64,8 +65,8 @@ const ExperienceForm = ({ entries, onChange }) => {
 
     await improveWithAIFn({
       current: description,
-      type: "experience",
-      organization: watch("organization")
+      type: "project",
+      organization: watch("title")
     });
   };
 
@@ -97,27 +98,38 @@ const ExperienceForm = ({ entries, onChange }) => {
   }, [improvedContent, improveError, isImproving, setValue]);
 
   const current = watch('current');
-  const organization = watch("organization");
 
   return (
     <div className="space-y-8 bg-gray-900 p-6 rounded-xl border border-gray-800">
       {entries.map((item, index) => (
         <Card key={index} className="bg-gray-800 border border-gray-700">
           <CardHeader className="flex flex-row justify-between items-start space-y-0">
-            <div>
-              <CardTitle className="text-white">{item.title} @ {item.organization}</CardTitle>
+            <div className="flex-1">
+              <CardTitle className="text-white">{item.title}</CardTitle>
               <CardDescription className="text-gray-400">
-                {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
+                {item.technologies} • {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
               </CardDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDelete(index)}
-              className="text-gray-400 hover:text-red-500 cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {item.link && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(item.link, '_blank')}
+                  className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(index)}
+                className="text-gray-400 hover:text-red-500 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-gray-300 whitespace-pre-wrap">{item.description}</p>
@@ -128,19 +140,19 @@ const ExperienceForm = ({ entries, onChange }) => {
       {isAdding && (
         <Card className="bg-gray-800 border border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Add Work Experience</CardTitle>
+            <CardTitle className="text-white">Add Project</CardTitle>
             <CardDescription className="text-gray-400">
-              Provide the details of your work experience
+              Provide the details of your project
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Job Title
+                  Project Title
                 </label>
                 <Input
-                  placeholder="e.g. Software Engineer"
+                  placeholder="e.g. E-commerce Platform"
                   {...register('title')}
                   className="bg-gray-700 border-gray-600 text-white"
                 />
@@ -149,14 +161,14 @@ const ExperienceForm = ({ entries, onChange }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Company Name
+                  Technologies Used
                 </label>
                 <Input
-                  placeholder="e.g. OpenAI"
-                  {...register('organization')}
+                  placeholder="e.g. React, Node.js, MongoDB"
+                  {...register('technologies')}
                   className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.organization && <p className="text-red-400 text-sm mt-1">{errors.organization.message}</p>}
+                {errors.technologies && <p className="text-red-400 text-sm mt-1">{errors.technologies.message}</p>}
               </div>
             </div>
 
@@ -199,16 +211,28 @@ const ExperienceForm = ({ entries, onChange }) => {
                 className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-700"
               />
               <label htmlFor="current" className="text-sm text-gray-300">
-                I currently work here
+                This is an ongoing project
               </label>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Job Description
+                Project Link (Optional)
+              </label>
+              <Input
+                placeholder="e.g. https://github.com/username/project"
+                {...register('link')}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+              {errors.link && <p className="text-red-400 text-sm mt-1">{errors.link.message}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Project Description
               </label>
               <Textarea
-                placeholder="Describe your responsibilities, achievements, and key contributions..."
+                placeholder="Describe your project, including features, challenges, and outcomes..."
                 {...register("description")}
                 className="bg-gray-700 border-gray-600 text-white min-h-[120px]"
               />
@@ -262,12 +286,11 @@ const ExperienceForm = ({ entries, onChange }) => {
           onClick={() => setIsAdding(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
         >
-          Add New Experience
+          Add New Project
         </Button>
       )}
     </div>
   );
-
 };
 
-export default ExperienceForm;
+export default ProjectForm;

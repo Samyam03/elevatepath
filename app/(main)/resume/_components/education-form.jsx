@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { experienceSchema } from '@/app/lib/schema';
+import { educationSchema } from '@/app/lib/schema';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -26,7 +26,7 @@ const formatDisplayDate = (dateString) => {
   return format(date, "MMM yyyy");
 };
 
-const ExperienceForm = ({ entries, onChange }) => {
+const EducationForm = ({ entries, onChange }) => {
   const [isAdding, setIsAdding] = useState(false);
 
   const {
@@ -37,12 +37,14 @@ const ExperienceForm = ({ entries, onChange }) => {
     watch,
     setValue,
   } = useForm({
-    resolver: zodResolver(experienceSchema),
+    resolver: zodResolver(educationSchema),
     defaultValues: {
-      title: '',
-      organization: '',
+      degree: '',
+      institution: '',
+      field: '',
       startDate: '',
       endDate: '',
+      gpa: '',
       description: '',
       current: false,
     },
@@ -64,8 +66,8 @@ const ExperienceForm = ({ entries, onChange }) => {
 
     await improveWithAIFn({
       current: description,
-      type: "experience",
-      organization: watch("organization")
+      type: "education",
+      organization: watch("institution")
     });
   };
 
@@ -97,7 +99,6 @@ const ExperienceForm = ({ entries, onChange }) => {
   }, [improvedContent, improveError, isImproving, setValue]);
 
   const current = watch('current');
-  const organization = watch("organization");
 
   return (
     <div className="space-y-8 bg-gray-900 p-6 rounded-xl border border-gray-800">
@@ -105,9 +106,10 @@ const ExperienceForm = ({ entries, onChange }) => {
         <Card key={index} className="bg-gray-800 border border-gray-700">
           <CardHeader className="flex flex-row justify-between items-start space-y-0">
             <div>
-              <CardTitle className="text-white">{item.title} @ {item.organization}</CardTitle>
+              <CardTitle className="text-white">{item.degree} in {item.field}</CardTitle>
               <CardDescription className="text-gray-400">
-                {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
+                {item.institution} • {item.current ? `${item.startDate} - Present` : `${item.startDate} - ${item.endDate}`}
+                {item.gpa && ` • GPA: ${item.gpa}`}
               </CardDescription>
             </div>
             <Button
@@ -119,44 +121,72 @@ const ExperienceForm = ({ entries, onChange }) => {
               <X className="h-4 w-4" />
             </Button>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 whitespace-pre-wrap">{item.description}</p>
-          </CardContent>
+          {item.description && (
+            <CardContent>
+              <p className="text-gray-300 whitespace-pre-wrap">{item.description}</p>
+            </CardContent>
+          )}
         </Card>
       ))}
 
       {isAdding && (
         <Card className="bg-gray-800 border border-gray-700">
           <CardHeader>
-            <CardTitle className="text-white">Add Work Experience</CardTitle>
+            <CardTitle className="text-white">Add Education</CardTitle>
             <CardDescription className="text-gray-400">
-              Provide the details of your work experience
+              Provide the details of your educational background
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Job Title
+                  Degree
                 </label>
                 <Input
-                  placeholder="e.g. Software Engineer"
-                  {...register('title')}
+                  placeholder="e.g. Bachelor of Science"
+                  {...register('degree')}
                   className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.title && <p className="text-red-400 text-sm mt-1">{errors.title.message}</p>}
+                {errors.degree && <p className="text-red-400 text-sm mt-1">{errors.degree.message}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Company Name
+                  Institution
                 </label>
                 <Input
-                  placeholder="e.g. OpenAI"
-                  {...register('organization')}
+                  placeholder="e.g. Stanford University"
+                  {...register('institution')}
                   className="bg-gray-700 border-gray-600 text-white"
                 />
-                {errors.organization && <p className="text-red-400 text-sm mt-1">{errors.organization.message}</p>}
+                {errors.institution && <p className="text-red-400 text-sm mt-1">{errors.institution.message}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Field of Study
+                </label>
+                <Input
+                  placeholder="e.g. Computer Science"
+                  {...register('field')}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+                {errors.field && <p className="text-red-400 text-sm mt-1">{errors.field.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  GPA (Optional)
+                </label>
+                <Input
+                  placeholder="e.g. 3.8/4.0"
+                  {...register('gpa')}
+                  className="bg-gray-700 border-gray-600 text-white"
+                />
+                {errors.gpa && <p className="text-red-400 text-sm mt-1">{errors.gpa.message}</p>}
               </div>
             </div>
 
@@ -199,42 +229,44 @@ const ExperienceForm = ({ entries, onChange }) => {
                 className="h-4 w-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-700"
               />
               <label htmlFor="current" className="text-sm text-gray-300">
-                I currently work here
+                I am currently studying here
               </label>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Job Description
+                Description (Optional)
               </label>
               <Textarea
-                placeholder="Describe your responsibilities, achievements, and key contributions..."
+                placeholder="Add any relevant coursework, achievements, or activities..."
                 {...register("description")}
                 className="bg-gray-700 border-gray-600 text-white min-h-[120px]"
               />
               {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description.message}</p>}
             </div>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleImproveDescription}
-              disabled={isImproving || !watch("description")}
-              className="text-blue-400 hover:text-blue-300 cursor-pointer"
-            >
-              {isImproving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Improving...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Improve with AI
-                </>
-              )}
-            </Button>
+            {watch("description") && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleImproveDescription}
+                disabled={isImproving}
+                className="text-blue-400 hover:text-blue-300 cursor-pointer"
+              >
+                {isImproving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Improving...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Improve with AI
+                  </>
+                )}
+              </Button>
+            )}
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
             <Button
@@ -262,12 +294,11 @@ const ExperienceForm = ({ entries, onChange }) => {
           onClick={() => setIsAdding(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
         >
-          Add New Experience
+          Add New Education
         </Button>
       )}
     </div>
   );
-
 };
 
-export default ExperienceForm;
+export default EducationForm;

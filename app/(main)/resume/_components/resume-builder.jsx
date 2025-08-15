@@ -19,7 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { saveResume } from "@/actions/resume";
-import EntryForm from "./entry-form";
+import ExperienceForm from "./entry-form";
+import EducationForm from "./education-form";
+import ProjectForm from "./project-form";
 import useFetch from "@/components/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
@@ -172,25 +174,65 @@ export default function ResumeBuilder({ initialContent }) {
             currentList.push(currentEntry);
           }
           
-          // Parse title and organization from format: "### Title @ Organization"
-          const titleOrgMatch = line.match(/### (.+?) @ (.+)/);
-          if (titleOrgMatch) {
-            currentEntry = {
-              title: titleOrgMatch[1],
-              organization: titleOrgMatch[2],
-              startDate: '',
-              endDate: '',
-              description: '',
-              current: false
-            };
-          } else {
-            // Fallback if format doesn't match
+          if (currentSection === 'experience') {
+            // Parse title and organization from format: "### Title @ Organization"
+            const titleOrgMatch = line.match(/### (.+?) @ (.+)/);
+            if (titleOrgMatch) {
+              currentEntry = {
+                title: titleOrgMatch[1],
+                organization: titleOrgMatch[2],
+                startDate: '',
+                endDate: '',
+                description: '',
+                current: false
+              };
+            } else {
+              // Fallback if format doesn't match
+              currentEntry = {
+                title: line.substring(4),
+                organization: '',
+                startDate: '',
+                endDate: '',
+                description: '',
+                current: false
+              };
+            }
+          } else if (currentSection === 'education') {
+            // Parse education format: "### Degree in Field"
+            const degreeFieldMatch = line.match(/### (.+?) in (.+)/);
+            if (degreeFieldMatch) {
+              currentEntry = {
+                degree: degreeFieldMatch[1],
+                field: degreeFieldMatch[2],
+                institution: '',
+                startDate: '',
+                endDate: '',
+                gpa: '',
+                description: '',
+                current: false
+              };
+            } else {
+              // Fallback if format doesn't match
+              currentEntry = {
+                degree: line.substring(4),
+                field: '',
+                institution: '',
+                startDate: '',
+                endDate: '',
+                gpa: '',
+                description: '',
+                current: false
+              };
+            }
+          } else if (currentSection === 'projects') {
+            // Parse project format: "### Project Title"
             currentEntry = {
               title: line.substring(4),
-              organization: '',
+              technologies: '',
               startDate: '',
               endDate: '',
               description: '',
+              link: '',
               current: false
             };
           }
@@ -204,14 +246,33 @@ export default function ResumeBuilder({ initialContent }) {
             currentEntry.current = dateMatch[2] === 'Present';
           }
         }
-        else if (line && currentEntry && !line.startsWith('##') && !line.startsWith('###')) {
-          // This is description content
-          if (currentEntry.description) {
-            currentEntry.description += '\n' + line;
+        else if (line && currentEntry && !line.startsWith('##') && !line.startsWith('###') && !line.match(/^\d{4}\s*-\s*(Present|\d{4})/)) {
+          // Parse additional information based on section type
+          if (currentSection === 'education' && currentEntry.institution === '') {
+            // Parse institution and GPA from format: "Institution • DateRange • GPA: X.X"
+            const institutionMatch = line.match(/^([^•]+?)(?:\s*•\s*\d{4}\s*-\s*(?:Present|\d{4}))?(?:\s*•\s*GPA:\s*([\d.]+))?/);
+            if (institutionMatch) {
+              currentEntry.institution = institutionMatch[1].trim();
+              if (institutionMatch[2]) {
+                currentEntry.gpa = institutionMatch[2];
+              }
+            }
+          } else if (currentSection === 'projects' && currentEntry.technologies === '') {
+            // Parse technologies from format: "Technologies • DateRange"
+            const techMatch = line.match(/^([^•]+?)(?:\s*•\s*\d{4}\s*-\s*(?:Present|\d{4}))?/);
+            if (techMatch) {
+              currentEntry.technologies = techMatch[1].trim();
+            }
           } else {
-            currentEntry.description = line;
+            // This is description content
+            if (currentEntry.description) {
+              currentEntry.description += '\n' + line;
+            } else {
+              currentEntry.description = line;
+            }
           }
         }
+
         else if (line && currentSection === 'summary' && !line.startsWith('##')) {
           formData.summary += (formData.summary ? '\n' : '') + line;
         }
@@ -260,6 +321,8 @@ export default function ResumeBuilder({ initialContent }) {
     }
   }, [initialContent, setValue]);
 
+
+
   useEffect(() => {
     if (activeTab === "edit") {
       const newContent = getCombinedContent();
@@ -297,7 +360,8 @@ export default function ResumeBuilder({ initialContent }) {
       parts.push(`💼 [LinkedIn](${contactInfo.linkedin})`);
     if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
 
-    const nameLine = contactInfo.name || user.fullName;
+    // Use contactInfo.name first, then user.fullName if available, otherwise empty string
+    const nameLine = contactInfo.name || (user ? user.fullName : '') || '';
     if (!nameLine && parts.length === 0) return "";
 
     const contactLines = parts.length > 0
@@ -729,8 +793,7 @@ export default function ResumeBuilder({ initialContent }) {
                   name="experience"
                   control={control}
                   render={({ field }) => (
-                    <EntryForm
-                      type="Experience"
+                    <ExperienceForm
                       entries={field.value}
                       onChange={field.onChange}
                     />
@@ -749,8 +812,7 @@ export default function ResumeBuilder({ initialContent }) {
                   name="education"
                   control={control}
                   render={({ field }) => (
-                    <EntryForm
-                      type="Education"
+                    <EducationForm
                       entries={field.value}
                       onChange={field.onChange}
                     />
@@ -769,8 +831,7 @@ export default function ResumeBuilder({ initialContent }) {
                   name="projects"
                   control={control}
                   render={({ field }) => (
-                    <EntryForm
-                      type="Project"
+                    <ProjectForm
                       entries={field.value}
                       onChange={field.onChange}
                     />
