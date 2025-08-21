@@ -11,6 +11,13 @@ A modern web application for building resumes, cover letters, and preparing for 
 
 Access the app here: [elevatepath.vercel.app](https://elevatepath.vercel.app/)
 
+## 🔑 Demo Credentials
+
+Use these to sign in and explore the app:
+- Email: `test@email.com` — Password: `ExploreNow!2025`
+- Email: `sam@gmail.com` — Password: `TalentPortal@2025`
+- Email: `view@example.com` — Password: `TryThisDemo!88`
+
 ---
 
 ## ✨ Features
