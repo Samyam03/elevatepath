@@ -6,9 +6,36 @@ import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
-// Initialize the AI model
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// Initialize the AI model (lazy to allow missing key to be caught in generateQuiz)
+function getModel() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey?.trim()) {
+    throw new Error(
+      "GEMINI_API_KEY is not set. Add it in .env to enable quiz generation."
+    );
+  }
+  return new GoogleGenerativeAI(apiKey).getGenerativeModel({
+    model: "gemini-2.5-flash",
+  });
+}
+
+/**
+ * Extracts a JSON object from AI response (handles markdown wrappers and extra text).
+ */
+function extractJsonFromResponse(text) {
+  if (!text?.trim()) return null;
+  let cleaned = text.replace(/```(?:json)?\n?/g, "").trim();
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) {
+    cleaned = cleaned.slice(start, end + 1);
+  }
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Generates a quiz based on the user's industry and skills.
@@ -29,42 +56,82 @@ export async function generateQuiz() {
 
   if (!user) throw new Error("User not found");
 
-  // Create a prompt for the AI model
+  const industry = user.industry?.trim() || "general technology";
+  const skillsSuffix = user.skills?.length
+    ? ` with expertise in ${user.skills.join(", ")}`
+    : "";
+
   const prompt = `
-    Generate 10 technical interview questions for a ${
-      user.industry
-    } professional${
-    user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
-  }.
+Generate exactly 10 technical interview questions for a ${industry} professional${skillsSuffix}.
 
-    Each question should be multiple choice with 4 options.
+Each question must be multiple choice with exactly 4 options.
+For "correctAnswer", use the exact option text (one of the four option strings).
 
-    Return the response in this JSON format only, no additional text:
+Return ONLY valid JSON in this shape, no other text or markdown:
+{
+  "questions": [
     {
-      "questions": [
-        {
-          "question": "string",
-          "options": ["string", "string", "string", "string"],
-          "correctAnswer": "string",
-          "explanation": "string"
-        }
-      ]
+      "question": "Your question here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Brief explanation."
     }
-  `;
+  ]
+}
+`;
 
   try {
-    // Generate quiz using AI
+    const model = getModel();
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-
-    // Remove markdown formatting if present and parse JSON
-    const cleanedText = responseText.replace(/```(?:json)?\n?/g, "").trim();
-    const quiz = JSON.parse(cleanedText);
-
-    return quiz.questions;
+    const response = result.response;
+    if (!response) {
+      throw new Error("No response from the AI model.");
+    }
+    const responseText = response.text();
+    const quiz = extractJsonFromResponse(responseText);
+    if (!quiz?.questions || !Array.isArray(quiz.questions)) {
+      console.error("Unexpected quiz response shape:", responseText?.slice(0, 500));
+      throw new Error(
+        "Quiz response was invalid. Please try again."
+      );
+    }
+    // Normalize: ensure each item has question, options, correctAnswer, explanation
+    const normalized = quiz.questions
+      .filter(
+        (q) =>
+          q &&
+          typeof q.question === "string" &&
+          Array.isArray(q.options) &&
+          q.options.length === 4 &&
+          (typeof q.correctAnswer === "string" || typeof q.correctAnswer === "number")
+      )
+      .slice(0, 10)
+      .map((q) => ({
+        question: String(q.question).trim(),
+        options: q.options.map((o) => String(o).trim()),
+        correctAnswer:
+          typeof q.correctAnswer === "number"
+            ? q.options[q.correctAnswer]
+            : String(q.correctAnswer).trim(),
+        explanation: typeof q.explanation === "string" ? q.explanation.trim() : "",
+      }));
+    if (normalized.length < 5) {
+      throw new Error(
+        "Not enough valid questions were generated. Please try again."
+      );
+    }
+    return normalized;
   } catch (error) {
     console.error("Error generating quiz:", error);
-    throw new Error("Failed to generate quiz questions");
+    if (error instanceof SyntaxError) {
+      throw new Error("Quiz response was invalid. Please try again.");
+    }
+    if (error.message?.includes("GEMINI_API_KEY") || error.message?.includes("No response")) {
+      throw error;
+    }
+    throw new Error(
+      error.message || "Failed to generate quiz questions. Please try again."
+    );
   }
 }
 
@@ -119,7 +186,8 @@ export async function saveQuizResult(questions, answers, score) {
 
     try {
       // Generate improvement tip using AI
-      const tipResult = await model.generateContent(improvementPrompt);
+      const tipModel = getModel();
+      const tipResult = await tipModel.generateContent(improvementPrompt);
       improvementTip = tipResult.response.text().trim();
       console.log(improvementTip);
     } catch (error) {

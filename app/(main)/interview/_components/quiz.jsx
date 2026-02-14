@@ -27,6 +27,7 @@ const Quiz = () => {
     loading: generatingQuiz,
     fn: generateQuizFn,
     data: quizData,
+    error: quizError,
   } = useFetch(generateQuiz);
 
   const {
@@ -115,17 +116,22 @@ const Quiz = () => {
             This quiz will assess your knowledge in your chosen field.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <p className="text-gray-800 dark:text-gray-300">
             Click below to begin.
           </p>
+          {quizError && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {quizError.message}
+            </p>
+          )}
         </CardContent>
         <CardFooter className="flex justify-end">
           <Button
             onClick={generateQuizFn}
             className="bg-blue-600 hover:bg-blue-700 text-white transition-all cursor-pointer"
           >
-            Start Quiz
+            {quizError ? "Try Again" : "Start Quiz"}
           </Button>
         </CardFooter>
       </Card>
